@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ReceiptLogger</string>
+    <string name="check_screen">Check</string>
+    <string name="back_button">Back</string>
+    <string name="loading">Loading</string>
+
+</resources>
