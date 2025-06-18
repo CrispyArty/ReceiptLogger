@@ -13,24 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.example.receiptlogger
 
-package com.example.receiptlogger.model
+import android.app.Application
+import com.example.receiptlogger.data.AppContainer
+import com.example.receiptlogger.data.DefaultAppContainer
 
-import android.icu.util.TimeZone
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.Date
-
-data class CheckItem(
-    val name: String,
-    val count: Float,
-    val itemPrice: Float,
-    var totalPrice: Float = 0.0f,
-)
-
-data class Check(
-    val description: String,
-    val items: List<CheckItem>,
-    val totalPrice: Float,
-    val date: LocalDateTime = LocalDateTime.now()
-)
+class MainApplication : Application() {
+    /** AppContainer instance used by the rest of classes to obtain dependencies */
+    lateinit var container: AppContainer
+    override fun onCreate() {
+        super.onCreate()
+        container = DefaultAppContainer()
+    }
+}

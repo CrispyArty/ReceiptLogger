@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.receiptlogger"
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.receiptlogger"
@@ -51,8 +51,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.retrofit)
+    implementation(libs.converter.scalars)
     implementation(libs.jsoup)
     implementation(libs.zxing.android.embedded)
+    implementation(libs.androidx.graphics.shapes)
+//    implementation(libs.androidx.graphics.shapes.android)
 
 
     testImplementation(libs.junit)

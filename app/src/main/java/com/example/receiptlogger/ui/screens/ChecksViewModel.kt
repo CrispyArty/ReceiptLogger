@@ -34,6 +34,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.ResponseBody
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
@@ -49,9 +50,7 @@ sealed interface RequestUiState {
     object Loading : RequestUiState
 }
 
-class EmptyBodyException : RuntimeException()
 class ParseErrorException : RuntimeException()
-
 
 class ChecksViewModel : ViewModel() {
     /** The mutable State that stores the status of the most recent request */
@@ -84,31 +83,12 @@ class ChecksViewModel : ViewModel() {
 
             requestUiState = RequestUiState.Loading
             requestUiState = try {
+//                val qrCode = url.split("/").last()
 
-                var listResult: Response<ResponseBody>? = null
+//                Log.d("Gosu", "==========$url")
+                val html = CheckApi.retrofitService.getCheck(url)
 
-                withContext(Dispatchers.IO) {
-
-                    val qrCode = url.split("/").last()
-
-                    Log.d("Gosu", "==========$url")
-                    listResult = CheckApi.retrofitService.getCheck(url)
-                }
-
-//                listResult.body()
-////                Log.d("Gosu", listResult::class.toString())
-
-                val body = listResult?.body()
-
-                if (body == null) {
-                    throw EmptyBodyException()
-                }
-
-                val check = addCheckFromJsoupDoc(doc = Jsoup.parse(body.string()))
-
-                if (check == null) {
-                    throw ParseErrorException()
-                }
+                val check = addCheckFromJsoupDoc(doc = Jsoup.parse(html))
 
                 _checksUiState.update { currentState ->
                     currentState + listOf(check)
@@ -123,20 +103,19 @@ class ChecksViewModel : ViewModel() {
                 RequestUiState.Error(error = e.message.toString(), name = "HttpException")
             } catch (e: ParseErrorException) {
                 RequestUiState.Error(error = e.message.toString(), name = "ParseErrorException")
-            } catch (e: EmptyBodyException) {
-                RequestUiState.Error(error = e.message.toString(), name = "EmptyBodyException")
             }
         }
     }
 
-    private fun addCheckFromJsoupDoc(doc: Document): Check? {
+    private fun addCheckFromJsoupDoc(doc: Document): Check {
         var checkParseGroupIndex = 0
         var isSecondLine = false
         var isDateParsed = false
 
         val checkParseGroups = arrayOf<String>("desc", "items", "total", "tax", "card", "date")
 
-        var check = Check("", listOf(), 0.0f)
+        var description = ""
+        var fullPrice = 0.0f
         val checkItems = mutableListOf<CheckItem>()
 
 //        Log.d("Gosu", doc.select(".font-monospace").text())
@@ -155,14 +134,10 @@ class ChecksViewModel : ViewModel() {
             }
 
             when (checkParseGroups[checkParseGroupIndex]) {
-                "desc" -> addDescription(check, it.text())
+                "desc" -> description += parseDescription(it)
                 "items" ->
                     if (!isSecondLine) {
-                        if (it.child(0).text() == "") {
-                            return@forEach
-                        }
-
-                        val checkItem = createItem(it.child(0).text(), it.child(1).text())
+                        val checkItem = parseReceiptItem(it)
                         if (checkItem == null) {
                             return@forEach
                         }
@@ -170,13 +145,14 @@ class ChecksViewModel : ViewModel() {
 
                         isSecondLine = true
                     } else {
-                        addItemTotalPrice(checkItems.last(), it.child(1).text())
+                        checkItems.last().totalPrice = parseReceiptItemTotalPrice(it)
+
                         isSecondLine = false
                     }
 
-                "total" -> addCheckTotalPrice(check, it.child(1).text())
+                "total" -> fullPrice = parseCheckTotalPrice(it)
 //                "date" -> if (!isDateParsed) {
-////                    addCheckTotalPrice(check, it.child(0).text(), it.child(1).text())
+////                    parseCheckTotalPrice(check, it.child(0).text(), it.child(1).text())
 //                    isDateParsed = true
 //                }
                 else -> return@forEach
@@ -184,25 +160,28 @@ class ChecksViewModel : ViewModel() {
         }
 //        Log.d("Gosu", "-----===${checkItems.size}")
 //        Log.d("Gosu", check.description)
+        if (checkItems.isEmpty()) {
+            throw ParseErrorException()
+        }
 
-        check = check.copy(items = checkItems)
-        return check
+        return Check(description, checkItems, fullPrice)
     }
 
-    private fun addDescription(check: Check, desc: String) {
+    private fun parseDescription(row: Element) : String {
 //        Log.d("Gosu", "addDescription: ${desc}")
 
-        check.description += "$desc\n"
+        return "${row.text()}\n"
     }
 
-    private fun createItem(name: String, countAndPrice: String): CheckItem? {
+    private fun parseReceiptItem(row: Element): CheckItem? {
+        val name = row.child(0).text()
+        val countAndPrice = row.child(1).text()
+
 //        Log.d("Gosu", "createItem: ${name} | ${countAndPrice}")
 
-        val str1 = "  2.000 x 15.99 "
+        val list: List<String> = countAndPrice.trim().split("x")
 
-        val list: List<String> = str1.trim().split("x")
-
-        if (list.size != 2) {
+        if (list.size != 2 || name.isEmpty()) {
             return null
         }
 
@@ -214,17 +193,15 @@ class ChecksViewModel : ViewModel() {
             return null
         }
 
-        return CheckItem(name = nameTrimmed, count = count, itemPrice = price, totalPrice = 0.0f)
+        return CheckItem(name = nameTrimmed, count = count, itemPrice = price)
     }
 
-    private fun addItemTotalPrice(checkItem: CheckItem, price: String) {
+    private fun parseReceiptItemTotalPrice(row: Element) : Float {
 //        Log.d("Gosu", "addItemTotalPrice: ${price}")
+        val price = row.child(1).text()
+        val parsedPrice = price.trim().split(" ")[0]
 
-        val str = price.trim()
-
-        val parsedPrice = str.split(" ")[0]
-
-        checkItem.totalPrice = parsedPrice.toFloatOrNull() ?: 0.0f
+        return parsedPrice.toFloatOrNull() ?: 0.0f
     }
 
 //    private fun addCheckDate(check: Check, date: String) {
@@ -232,7 +209,9 @@ class ChecksViewModel : ViewModel() {
 //        check.date = ""
 //    }
 
-    private fun addCheckTotalPrice(check: Check, price: String) {
-        check.totalPrice = price.toFloatOrNull() ?: 0.0f
+    private fun parseCheckTotalPrice(row: Element): Float {
+        val price = row.child(1).text()
+
+        return price.toFloatOrNull() ?: 0.0f
     }
 }

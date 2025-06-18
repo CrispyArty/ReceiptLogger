@@ -36,6 +36,7 @@ import com.example.receiptlogger.ui.screens.CheckScreen
 import com.example.receiptlogger.ui.screens.ChecksViewModel
 import com.example.receiptlogger.ui.screens.ListScreen
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
+import org.jsoup.Jsoup
 
 enum class ReceiptLoggerScreen(@StringRes val title: Int) {
     List(title = R.string.app_name),
@@ -80,9 +81,9 @@ fun ReceiptLoggerApp(
         backStackEntry?.destination?.route ?: ReceiptLoggerScreen.List.name
     )
 
+    val checks by viewModel.checksUiState.collectAsState()
     var currentCheck by rememberSaveable { mutableStateOf<Check?>(null) }
 
-    val checks by viewModel.checksUiState.collectAsState()
 
 
     Scaffold(
@@ -131,6 +132,11 @@ fun ReceiptLoggerApp(
 @Preview(showBackground = true)
 @Composable
 fun StartOrderPreview() {
+//    val html = "<ss>s<assa>"
+//    val doc = Jsoup.parse(html)
+//    println("--------------------------")
+//    println(doc)
+
     ReceiptLoggerTheme {
         ReceiptLoggerApp()
     }

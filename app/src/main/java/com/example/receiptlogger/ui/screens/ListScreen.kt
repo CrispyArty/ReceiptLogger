@@ -1,5 +1,6 @@
 package com.example.receiptlogger.ui.screens
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -15,11 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +38,8 @@ import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @Composable
@@ -86,12 +91,7 @@ fun List(
                     }
                 }
             } else {
-                Text(
-                    text = "No checks in system",
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                EmptyList()
             }
         }
 
@@ -111,6 +111,38 @@ fun List(
 //            }
         }
     }
+}
+
+@Composable
+private fun EmptyList() {
+    val coroutineScope = rememberCoroutineScope()
+
+    var i = 0
+
+    Text(
+        text = "No checks in system",
+        fontSize = 24.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    coroutineScope.launch {
+        while (true) {
+            Log.d("gosu", "EmptyList-${i++}")
+            delay(500)
+        }
+    }
+    Button(onClick = {
+        coroutineScope.launch {
+            while (true) {
+                Log.d("gosu", "EmptyList-${i++}")
+                delay(500)
+            }
+        }
+    }) {
+        Text(text = "Click")
+    }
+
 }
 
 private fun scanOptions(): ScanOptions {
