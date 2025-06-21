@@ -22,8 +22,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import com.example.receiptlogger.ui.navigation.NavigationDestination
 import com.example.receiptlogger.R
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme

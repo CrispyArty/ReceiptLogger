@@ -38,32 +38,6 @@ fun ReceiptDetailsScreenMin(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ReceiptDetailsScreen(
-    navigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: ReceiptDetailsViewModel = viewModel()
-) {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
-    Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-//        topBar = {
-//            MainTopAppBar(
-//                title = stringResource(ReceiptDetailsDestination.titleRes),
-//                canNavigateBack = true,
-//                scrollBehavior = scrollBehavior,
-//                navigateUp = navigateBack
-//            )
-//        },
-    ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            Text("ReceiptDetailsScreen")
-        }
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun ReceiptDetailsScreenPreview() {
