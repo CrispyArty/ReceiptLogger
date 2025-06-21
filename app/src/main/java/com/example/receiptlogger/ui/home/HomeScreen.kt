@@ -34,17 +34,16 @@ object HomeDestination : NavigationDestination {
     override val titleRes = R.string.app_name
 }
 
-
 @Composable
 fun HomeScreenMin(
     navigateToReceipt: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel()
 ) {
-
     ProvideAppBarTitle {
-        Text("gosu")
+        Text(stringResource(HomeDestination.titleRes))
     }
+
     HomeBody(
         navigateToReceipt = navigateToReceipt,
         modifier = modifier

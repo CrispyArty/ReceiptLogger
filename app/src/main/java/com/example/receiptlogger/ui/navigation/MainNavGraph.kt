@@ -1,49 +1,95 @@
 package com.example.receiptlogger.ui.navigation
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.receiptlogger.R
+import com.example.receiptlogger.ui.QrCodeScanButton
 import com.example.receiptlogger.ui.home.HomeDestination
-import com.example.receiptlogger.ui.home.HomeScreen
+import com.example.receiptlogger.ui.home.HomeScreenMin
 import com.example.receiptlogger.ui.receipt.ReceiptDetailsDestination
-import com.example.receiptlogger.ui.receipt.ReceiptDetailsScreen
+import com.example.receiptlogger.ui.receipt.ReceiptDetailsScreenMin
+import com.example.receiptlogger.ui.topbar.MainTopBarWithNav
+import com.example.receiptlogger.ui.topbar.ProvideAppBarTitle
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainNavHost(
+fun MainNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-//    val viewModalTopBar: TopBarViewModal = viewModel()
-//    navController
-
-    NavHost(
-        navController = navController,
-        startDestination = HomeDestination.route,
-        modifier = modifier
-    ) {
-        composable(route = HomeDestination.route) {
-            HomeScreen(
-                navigateToReceipt = {
-                    navController.navigate("${ReceiptDetailsDestination.route}/1")
-                },
-            )
-        }
-        composable(
-            route = ReceiptDetailsDestination.routeWithArgs,
-            arguments = listOf(navArgument(ReceiptDetailsDestination.itemIdArg) {
-                type = NavType.IntType
-            })
-        ) {
-            ReceiptDetailsScreen(
-                navigateBack = { navController.popBackStack() }
-            )
-        }
+    ProvideAppBarTitle {
+        Text(stringResource(HomeDestination.titleRes))
     }
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
+    val isHomeScreen = backStackEntry?.destination?.route == HomeDestination.route
+    val canNavigateBack =
+        backStackEntry != null && backStackEntry?.destination?.route != HomeDestination.route
+
+    Scaffold(
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            MainTopBarWithNav(
+                canNavigateBack = canNavigateBack,
+                scrollBehavior = scrollBehavior,
+                navigateUp = { navController.popBackStack() },
+            )
+        },
+        floatingActionButton = {
+            if (isHomeScreen) {
+                Row {
+                    QrCodeScanButton(
+                        onScan = {},
+                        modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_medium))
+                    )
+                }
+            }
+        },
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = HomeDestination.route,
+            modifier = modifier
+        ) {
+            val paddingModifier = modifier.padding(innerPadding)
+            composable(route = HomeDestination.route) {
+                HomeScreenMin(
+                    navigateToReceipt = {
+                        navController.navigate("${ReceiptDetailsDestination.route}/1")
+                    }, modifier = paddingModifier
+                )
+            }
+            composable(
+                route = ReceiptDetailsDestination.routeWithArgs,
+                arguments = listOf(navArgument(ReceiptDetailsDestination.itemIdArg) {
+                    type = NavType.IntType
+                })
+            ) {
+                ReceiptDetailsScreenMin(
+                    navigateBack = { navController.popBackStack() }, modifier = paddingModifier
+                )
+            }
+        }
+
+    }
 }
+
+

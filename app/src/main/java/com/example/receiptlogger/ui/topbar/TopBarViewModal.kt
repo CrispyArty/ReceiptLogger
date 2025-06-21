@@ -31,45 +31,17 @@ data class TopBarScreenData(
     val title: @Composable () -> Unit = {}
 )
 
-class TopBarViewModal : ViewModel() {
-}
-
 
 object TopBarUiState {
     private val _data = MutableStateFlow(TopBarScreenData())
     val data: StateFlow<TopBarScreenData> = _data.asStateFlow()
 
-    fun updateTitle(title: @Composable () -> Unit) {
+    internal fun updateTitle(title: @Composable () -> Unit) {
         _data.update { current ->
             current.copy(title = title)
         }
     }
 }
-//
-//class ScreenTopBarViewModal(private val savedStateHandle: SavedStateHandle) : ViewModel() {
-////    private val _uiTopBarData = MutableStateFlow(TopBarData(title = {}))
-////    val uiTopBarData: StateFlow<TopBarData> = _uiTopBarData.asStateFlow()
-////
-//    var title by mutableStateOf<@Composable () -> Unit>({ }, referentialEqualityPolicy())
-//
-//
-//    val gosuState: String? = savedStateHandle["gosu_state"]
-//
-//    init {
-//        Log.d("gosu", "modal init - savedStateHandle:${savedStateHandle}")
-//        Log.d("gosu", "modal init - gosuState:${gosuState}")
-//    }
-//
-//    fun saveGosuState(query: String) {
-//        savedStateHandle["gosu_state"] = query
-//    }
-//
-//
-//    companion object {
-//        val Factory = viewModelFactory {
-//            initializer {
-//                ScreenTopBarViewModal(this.createSavedStateHandle())
-//            }
-//        }
-//    }
-//}
+
+class TopBarViewModal : ViewModel() {
+}
