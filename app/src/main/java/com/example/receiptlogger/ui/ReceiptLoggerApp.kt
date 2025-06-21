@@ -30,11 +30,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.receiptlogger.model.Check
 import com.example.receiptlogger.R
-import com.example.receiptlogger.ui.screens.CheckScreen
-import com.example.receiptlogger.ui.screens.ChecksViewModel
-import com.example.receiptlogger.ui.screens.ListScreen
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
 import org.jsoup.Jsoup
 
@@ -43,101 +39,101 @@ enum class ReceiptLoggerScreen(@StringRes val title: Int) {
     Check(title = R.string.check_screen),
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ReceiptLoggerAppBar(
-    currentScreen: ReceiptLoggerScreen,
-    canNavigateBack: Boolean,
-    navigateUp: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-
-    TopAppBar(
-        title = { Text(stringResource(id = currentScreen.title)) },
-        colors = TopAppBarDefaults.mediumTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        modifier = modifier,
-        navigationIcon = {
-            if (canNavigateBack) {
-                IconButton(onClick = navigateUp) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_button)
-                    )
-                }
-            }
-        }
-    )
-}
-
-@Composable
-fun ReceiptLoggerApp(
-    viewModel: ChecksViewModel = viewModel(),
-    navController: NavHostController = rememberNavController()
-) {
-    val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentScreen = ReceiptLoggerScreen.valueOf(
-        backStackEntry?.destination?.route ?: ReceiptLoggerScreen.List.name
-    )
-
-    val checks by viewModel.checksUiState.collectAsState()
-    var currentCheck by rememberSaveable { mutableStateOf<Check?>(null) }
-
-
-
-    Scaffold(
-        topBar = {
-            ReceiptLoggerAppBar(
-                currentScreen = currentScreen,
-//                canNavigateBack = currentScreen != ReceiptLoggerScreen.Start,
-                canNavigateBack = navController.previousBackStackEntry != null,
-                navigateUp = { navController.navigateUp() }
-            )
-        }
-    ) { innerPadding ->
-//        val uiState by viewModel.uiState.collectAsState()
-        NavHost(
-            navController = navController,
-            startDestination = ReceiptLoggerScreen.List.name,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(route = ReceiptLoggerScreen.List.name) {
-                ListScreen(
-                    checks = checks,
-                    requestUiState = viewModel.requestUiState,
-                    onCheckClick={
-                        currentCheck = it
-                        navController.navigate(ReceiptLoggerScreen.Check.name)
-                     },
-                    onQrCodeFetch = {viewModel.getCheck(it)},
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                )
-            }
-
-            composable(route = ReceiptLoggerScreen.Check.name) {
-                CheckScreen(
-                    check = currentCheck,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 16.dp)
-                )
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun StartOrderPreview() {
-//    val html = "<ss>s<assa>"
-//    val doc = Jsoup.parse(html)
-//    println("--------------------------")
-//    println(doc)
-
-    ReceiptLoggerTheme {
-        ReceiptLoggerApp()
-    }
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun ReceiptLoggerAppBar(
+//    currentScreen: ReceiptLoggerScreen,
+//    canNavigateBack: Boolean,
+//    navigateUp: () -> Unit,
+//    modifier: Modifier = Modifier
+//) {
+//
+//    TopAppBar(
+//        title = { Text(stringResource(id = currentScreen.title)) },
+//        colors = TopAppBarDefaults.mediumTopAppBarColors(
+//            containerColor = MaterialTheme.colorScheme.primaryContainer
+//        ),
+//        modifier = modifier,
+//        navigationIcon = {
+//            if (canNavigateBack) {
+//                IconButton(onClick = navigateUp) {
+//                    Icon(
+//                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+//                        contentDescription = stringResource(R.string.back_button)
+//                    )
+//                }
+//            }
+//        }
+//    )
+//}
+//
+//@Composable
+//fun ReceiptLoggerApp1(
+//    viewModel: ChecksViewModel = viewModel(),
+//    navController: NavHostController = rememberNavController()
+//) {
+//    val backStackEntry by navController.currentBackStackEntryAsState()
+//    val currentScreen = ReceiptLoggerScreen.valueOf(
+//        backStackEntry?.destination?.route ?: ReceiptLoggerScreen.List.name
+//    )
+//
+//    val checks by viewModel.checksUiState.collectAsState()
+//    var currentCheck by rememberSaveable { mutableStateOf<Check?>(null) }
+//
+//
+//
+//    Scaffold(
+//        topBar = {
+//            ReceiptLoggerAppBar(
+//                currentScreen = currentScreen,
+////                canNavigateBack = currentScreen != ReceiptLoggerScreen.Start,
+//                canNavigateBack = navController.previousBackStackEntry != null,
+//                navigateUp = { navController.navigateUp() }
+//            )
+//        }
+//    ) { innerPadding ->
+////        val uiState by viewModel.uiState.collectAsState()
+//        NavHost(
+//            navController = navController,
+//            startDestination = ReceiptLoggerScreen.List.name,
+//            modifier = Modifier.padding(innerPadding)
+//        ) {
+//            composable(route = ReceiptLoggerScreen.List.name) {
+//                ListScreen(
+//                    checks = checks,
+//                    requestUiState = viewModel.requestUiState,
+//                    onCheckClick={
+//                        currentCheck = it
+//                        navController.navigate(ReceiptLoggerScreen.Check.name)
+//                     },
+//                    onQrCodeFetch = {viewModel.getCheck(it)},
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(16.dp)
+//                )
+//            }
+//
+//            composable(route = ReceiptLoggerScreen.Check.name) {
+//                CheckScreen(
+//                    check = currentCheck,
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .padding(vertical = 16.dp)
+//                )
+//            }
+//        }
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun StartOrderPreview() {
+////    val html = "<ss>s<assa>"
+////    val doc = Jsoup.parse(html)
+////    println("--------------------------")
+////    println(doc)
+//
+//    ReceiptLoggerTheme {
+//        ReceiptLoggerApp()
+//    }
+//}

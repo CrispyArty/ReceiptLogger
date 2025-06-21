@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -55,7 +56,14 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.zxing.android.embedded)
     implementation(libs.androidx.graphics.shapes)
+
+    // Room - Databases
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
 //    implementation(libs.androidx.graphics.shapes.android)
+//    ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
+//    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 
 
     testImplementation(libs.junit)

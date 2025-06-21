@@ -13,32 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.receiptlogger.ui.screens
+package com.example.receiptlogger.ui.receipt
 
-import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.receiptlogger.model.Check
-import com.example.receiptlogger.model.CheckItem
-import com.example.receiptlogger.network.CheckApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.ResponseBody
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
-import retrofit2.HttpException
-import retrofit2.Response
-import java.io.IOException
-import java.time.LocalDate
 
 
 /**
@@ -51,6 +28,13 @@ sealed interface RequestUiState {
 }
 
 class ParseErrorException : RuntimeException()
+
+class ReceiptDetailsViewModel : ViewModel() {
+
+}
+
+/**
+ *
 
 class ChecksViewModel : ViewModel() {
     /** The mutable State that stores the status of the most recent request */
@@ -215,3 +199,4 @@ class ChecksViewModel : ViewModel() {
         return price.toFloatOrNull() ?: 0.0f
     }
 }
+ */

@@ -16,21 +16,11 @@
 
 package com.example.receiptlogger.model
 
-import android.icu.util.TimeZone
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.Date
 
-data class CheckItem(
-    val name: String,
-    val count: Float,
-    val itemPrice: Float,
-    var totalPrice: Float = 0.0f,
-)
-
-data class Check(
+data class Receipt(
     val description: String,
-    val items: List<CheckItem>,
+    val items: List<ReceiptItem>,
     val totalPrice: Float,
     val date: LocalDateTime = LocalDateTime.now()
 )
