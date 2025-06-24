@@ -1,0 +1,12 @@
+<resources>
+    <string name="permission_final_dialog_title">Camera Permission</string>
+    <string name="permission_final_dialog_text">Camera permission is required, please allow camera permission from settings</string>
+
+    <string name="permission_rational_dialog_title">Alert</string>
+    <string name="permission_rational_dialog_text">Camera permission is required, to scan QR code</string>
+
+    <string name="permission_dialog_button_cancel">Cancel</string>
+    <string name="permission_dialog_button_ok">OK</string>
+
+
+</resources>

@@ -2,8 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.room)
 }
+
 
 android {
     namespace = "com.example.receiptlogger"
@@ -28,16 +30,28 @@ android {
             )
         }
     }
+
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
     }
+
+//    packaging {
+//        resources {
+//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//        }
+//    }
+
 }
 
 dependencies {
@@ -53,17 +67,27 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.retrofit)
     implementation(libs.converter.scalars)
-    implementation(libs.jsoup)
-    implementation(libs.zxing.android.embedded)
+    implementation(libs.jsoup) // Html parser
     implementation(libs.androidx.graphics.shapes)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Room - Databases
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
-//    implementation(libs.androidx.graphics.shapes.android)
-//    ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
-//    implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
+
+    // CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+    // ML Kit Barcode Scanning
+    implementation (libs.barcode.scanning)
+
+    // Zxing + barcode
+    implementation(libs.zxing.core)
+    implementation(libs.zxing.android.embedded)
 
 
     testImplementation(libs.junit)

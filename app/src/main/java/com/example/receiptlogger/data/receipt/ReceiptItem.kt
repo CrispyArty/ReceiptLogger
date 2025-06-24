@@ -1,6 +1,4 @@
-
 package com.example.receiptlogger.data.receipt
-
 
 data class ReceiptItem(
     val name: String,
@@ -8,4 +6,3 @@ data class ReceiptItem(
     val itemPrice: Float,
     var totalPrice: Float = 0.0f,
 )
-

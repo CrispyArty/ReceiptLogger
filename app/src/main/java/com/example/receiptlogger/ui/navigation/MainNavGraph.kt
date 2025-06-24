@@ -20,11 +20,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.receiptlogger.R
-import com.example.receiptlogger.ui.QrCodeScanButton
 import com.example.receiptlogger.ui.home.HomeDestination
 import com.example.receiptlogger.ui.home.HomeScreenMin
 import com.example.receiptlogger.ui.receipt.ReceiptDetailsDestination
 import com.example.receiptlogger.ui.receipt.ReceiptDetailsScreenMin
+import com.example.receiptlogger.ui.scannerButton.QrCodeScanButton
 import com.example.receiptlogger.ui.topbar.MainTopBarWithNav
 import com.example.receiptlogger.ui.topbar.ProvideAppBarTitle
 
@@ -40,7 +40,7 @@ fun MainNavGraph(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    val isHomeScreen = backStackEntry?.destination?.route == HomeDestination.route
+    val isHomeScreen: Boolean = backStackEntry?.destination?.route == HomeDestination.route
     val canNavigateBack =
         backStackEntry != null && backStackEntry?.destination?.route != HomeDestination.route
 

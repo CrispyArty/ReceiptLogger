@@ -15,9 +15,6 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel() : ViewModel() {
 
-    init {
-    }
-
 }
 
 data class HomeUiState(val itemList: List<Any> = listOf())

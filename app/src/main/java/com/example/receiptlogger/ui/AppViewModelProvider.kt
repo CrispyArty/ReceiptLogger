@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.receiptlogger.MainApplication
 import com.example.receiptlogger.ui.home.HomeViewModel
+import com.example.receiptlogger.ui.scannerButton.QrCodeScanViewModal
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
@@ -18,6 +19,13 @@ object AppViewModelProvider {
 //        }
 
         // Initializer for HomeViewModel
+
+        initializer {
+            QrCodeScanViewModal(
+                receiptRepository = mainApplication().container.receiptRepository
+            )
+        }
+
         initializer {
             HomeViewModel()
         }
