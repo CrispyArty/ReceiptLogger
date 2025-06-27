@@ -1,19 +1,17 @@
 package com.example.receiptlogger.workers
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import com.example.receiptlogger.R
 import com.example.receiptlogger.data.receipt.Receipt
 import com.example.receiptlogger.data.receipt.ReceiptItem
 import com.example.receiptlogger.data.receipt.ReceiptRepository
-import com.example.receiptlogger.network.ReceiptHtmlParser
-import com.example.receiptlogger.network.ReceiptService
+import com.example.receiptlogger.data.network.ReceiptHtmlParser
+import com.example.receiptlogger.data.network.ReceiptService
+import com.example.receiptlogger.types.FetchStatus
+import com.example.receiptlogger.types.toMoney
 import kotlinx.coroutines.flow.first
 
 private const val TAG = "FetchAndParseReceiptWorker"
@@ -58,14 +56,30 @@ class FetchAndParseReceiptWorker(
                 codFiscal = check.description,
                 registrationNumber = check.description,
                 address = check.description,
-                totalPrice = check.totalPrice,
+                totalPrice = check.totalPrice.toMoney(),
                 purchaseDate = check.purchaseDate,
-//                items = check.items.map { it.toReceiptItem() }
+
             )
+
             Log.d("gosu", "check.items.size: ${check.items.size}")
             Log.d("gosu", "check.items: ${check.items}")
+            Log.d("gosu", "receipt: ${receipt}")
 
             receiptRepository.update(receipt)
+
+            receiptRepository.insertItems(check.items.map {
+                ReceiptItem(
+                    name = it.name,
+                    count = it.count,
+                    itemPrice = it.itemPrice.toMoney(),
+                    totalPrice = it.totalPrice.toMoney(),
+                    receiptId = receipt.id
+                )
+            })
+
+            receiptRepository.update(receipt.copy(
+                fetchStatus = FetchStatus.Completed
+            ))
 
             Result.success()
         } catch (throwable: Throwable) {
@@ -78,11 +92,11 @@ class FetchAndParseReceiptWorker(
         }
     }
 
-    fun ReceiptHtmlParser.CheckItem.toReceiptItem(): ReceiptItem =
-        ReceiptItem(
-            name = name,
-            count = count,
-            itemPrice = itemPrice,
-            totalPrice = totalPrice,
-        )
+//    fun ReceiptHtmlParser.CheckItem.toReceiptItem(): ReceiptItem =
+//        ReceiptItem(
+//            name = name,
+//            count = count,
+//            itemPrice = itemPrice,
+//            totalPrice = totalPrice,
+//        )
 }

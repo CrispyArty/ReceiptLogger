@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "195b936a567aa6b867b826c6d9b8a659",
+    "identityHash": "0c7326f5a90f70757f8a8ece9c2ed146",
     "entities": [
       {
         "tableName": "receipts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `qr_code_url` TEXT NOT NULL, `cod_fiscal` TEXT, `registration_number` TEXT, `address` TEXT, `total_price` REAL, `purchase_date` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `qr_code_url` TEXT NOT NULL, `cod_fiscal` TEXT, `registration_number` TEXT, `address` TEXT, `total_price` INTEGER, `purchase_date` INTEGER, `fetch_status` TEXT NOT NULL, `upload_status` TEXT NOT NULL, `created_at` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -38,12 +38,30 @@
           {
             "fieldPath": "totalPrice",
             "columnName": "total_price",
-            "affinity": "REAL"
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "purchaseDate",
             "columnName": "purchase_date",
-            "affinity": "TEXT"
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fetchStatus",
+            "columnName": "fetch_status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uploadStatus",
+            "columnName": "upload_status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -63,11 +81,79 @@
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_receipts_qr_code_url` ON `${TABLE_NAME}` (`qr_code_url`)"
           }
         ]
+      },
+      {
+        "tableName": "receipt_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `count` REAL NOT NULL, `itemPrice` INTEGER NOT NULL, `totalPrice` INTEGER NOT NULL, `receipt_id` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "count",
+            "columnName": "count",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "itemPrice",
+            "columnName": "itemPrice",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalPrice",
+            "columnName": "totalPrice",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receiptId",
+            "columnName": "receipt_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_receipt_items_name",
+            "unique": false,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_receipt_items_name` ON `${TABLE_NAME}` (`name`)"
+          },
+          {
+            "name": "index_receipt_items_receipt_id",
+            "unique": false,
+            "columnNames": [
+              "receipt_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_receipt_items_receipt_id` ON `${TABLE_NAME}` (`receipt_id`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '195b936a567aa6b867b826c6d9b8a659')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c7326f5a90f70757f8a8ece9c2ed146')"
     ]
   }
 }

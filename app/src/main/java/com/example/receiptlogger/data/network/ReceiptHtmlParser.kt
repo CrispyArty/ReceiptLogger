@@ -1,15 +1,18 @@
-package com.example.receiptlogger.network
+package com.example.receiptlogger.data.network
 
-import com.example.receiptlogger.data.receipt.Receipt
-import com.example.receiptlogger.data.receipt.ReceiptItem
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 class ParseErrorException(message: String) : Exception(message)
 
 class ReceiptHtmlParser(val html: String) {
+
+    val formatter by lazy {
+        DateTimeFormatter.ofPattern("'DATA' dd.MM.yyyy 'ORA' HH:mm:ss")
+    }
 
     data class Check(
         var codFiscal: String = "",
@@ -18,12 +21,12 @@ class ReceiptHtmlParser(val html: String) {
         var description: String = "",
         val items: MutableList<CheckItem> = mutableListOf(),
         var totalPrice: Float = 0.0f,
-        var purchaseDate: String = "",
+        var purchaseDate: LocalDateTime = LocalDateTime.now(),
     )
 
     data class CheckItem(
         var name: String,
-        var count: Float,
+        var count: Double,
         var itemPrice: Float,
         var totalPrice: Float = 0.0f,
     )
@@ -113,7 +116,7 @@ class ReceiptHtmlParser(val html: String) {
             return null
         }
 
-        val count = list[0].trim().toFloatOrNull()
+        val count = list[0].trim().toDoubleOrNull()
         val price = list[1].trim().toFloatOrNull()
         val nameTrimmed = name.trim()
 

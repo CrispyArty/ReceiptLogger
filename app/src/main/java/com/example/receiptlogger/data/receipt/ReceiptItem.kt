@@ -1,8 +1,44 @@
 package com.example.receiptlogger.data.receipt
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.example.receiptlogger.types.Money
+
+
+@Entity(
+    tableName = "receipt_items"
+)
 data class ReceiptItem(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+
+    @ColumnInfo(name = "name", index = true)
     val name: String,
-    val count: Float,
-    val itemPrice: Float,
-    var totalPrice: Float = 0.0f,
+
+    @ColumnInfo(name = "count")
+    val count: Double,
+
+    @ColumnInfo(name = "itemPrice")
+    val itemPrice: Money,
+
+    @ColumnInfo(name = "totalPrice")
+    val totalPrice: Money,
+
+    @ColumnInfo(name = "receipt_id", index = true)
+    val receiptId: Int,
+)
+
+fun q(sql: String): String {
+    return sql
+}
+
+val sql = "SELECT * " +
+        "FROM receipts " +
+        "ORDER BY purchase_date DESC"
+
+var w = q(
+    "SELECT * " +
+            "FROM receipts " +
+            "ORDER BY purchase_date DESC"
 )

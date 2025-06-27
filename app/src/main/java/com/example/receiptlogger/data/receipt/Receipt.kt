@@ -2,10 +2,15 @@
 package com.example.receiptlogger.data.receipt
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.receiptlogger.types.FetchStatus
+import com.example.receiptlogger.types.Money
+import com.example.receiptlogger.types.UploadStatus
 import java.time.LocalDateTime
+
 
 @Entity(
     tableName = "receipts",
@@ -14,16 +19,44 @@ import java.time.LocalDateTime
     ]
 )
 data class Receipt(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
 
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    @ColumnInfo(name = "qr_code_url") val qrCodeUrl: String,
+    @ColumnInfo(name = "qr_code_url")
+    val qrCodeUrl: String,
 
-    // Unique tax code for business: Linella, Local, N1, etc..
-    @ColumnInfo(name = "cod_fiscal") val codFiscal: String? = null,
-    // unsure what this represent. Maybe cashier printer id?
-    @ColumnInfo(name = "registration_number") val registrationNumber: String? = null,
-    @ColumnInfo(name = "address") val address: String? = null,
-//    val items: List<ReceiptItem> = emptyList<ReceiptItem>(),
-    @ColumnInfo(name = "total_price") val totalPrice: Float? = null,
-    @ColumnInfo(name = "purchase_date") val purchaseDate: String? = null
+    @ColumnInfo(name = "cod_fiscal")
+    val codFiscal: String? = null,  // Unique tax code for business: Linella, Local, N1, etc..
+
+    @ColumnInfo(name = "registration_number")
+    val registrationNumber: String? = null,  // unsure what this represent. Maybe cashier printer id?
+
+    @ColumnInfo(name = "address")
+    val address: String? = null,
+
+
+    @ColumnInfo(name = "total_price")
+    val totalPrice: Money? = null,
+
+    @ColumnInfo(name = "purchase_date")
+    val purchaseDate: LocalDateTime? = null,
+
+//    @ColumnInfo(name = "purchase_date")
+//    val itemCounts: LocalDateTime? = null,
+
+    @ColumnInfo(name = "fetch_status")
+    val fetchStatus: FetchStatus = FetchStatus.Pending,
+
+    @ColumnInfo(name = "upload_status")
+    val uploadStatus: UploadStatus = UploadStatus.Pending,
+
+    @ColumnInfo(name = "created_at")
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+)
+
+
+data class ReceiptListItem(
+    @Embedded val receipt: Receipt,
+
+    val itemCount: Int
 )

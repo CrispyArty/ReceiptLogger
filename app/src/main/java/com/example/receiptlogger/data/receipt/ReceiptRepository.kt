@@ -26,40 +26,48 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.receiptlogger.data.ReceiptDatabase
+import com.example.receiptlogger.types.FetchStatus
 import com.example.receiptlogger.workers.FetchAndParseReceiptWorker
 import com.example.receiptlogger.workers.TAG_FETCH_AND_PARSE
 import com.example.receiptlogger.workers.WORKER_KEY_RECEIPT_ID
 import kotlinx.coroutines.flow.Flow
 
 interface ReceiptRepository {
-    fun getAllStream(): Flow<List<Receipt>>
+    fun getAllStream(): Flow<List<ReceiptListItem>>
 
     fun getItemStream(id: Int): Flow<Receipt?>
 
-    suspend fun isExistByCode(qrCodeUrl: String) : Boolean
+    suspend fun isExistByCode(qrCodeUrl: String): Boolean
 
-    suspend fun insert(item: Receipt) : Long
+    suspend fun insert(item: Receipt): Long
+
+    suspend fun insertItems(items: List<ReceiptItem>): LongArray
 
     suspend fun delete(item: Receipt)
 
-    suspend fun update(item: Receipt)
+    suspend fun update(item: Receipt): Int
 
     suspend fun insertAndParse(item: Receipt)
 }
 
 class LocalReceiptRepository(
     context: Context,
-    private val dao: ReceiptDao,
+    private val database: ReceiptDatabase,
 ) : ReceiptRepository {
+    private val dao = database.receiptDao()
+
     private val workManager = WorkManager.getInstance(context)
 
-    override fun getAllStream(): Flow<List<Receipt>> = dao.getAll()
+    override fun getAllStream(): Flow<List<ReceiptListItem>> = dao.getAllForList(FetchStatus.Completed)
 
     override fun getItemStream(id: Int): Flow<Receipt?> = dao.getItem(id)
 
     override suspend fun isExistByCode(qrCodeUrl: String): Boolean = dao.isExistByCode(qrCodeUrl)
 
     override suspend fun insert(item: Receipt) = dao.insert(item)
+
+    override suspend fun insertItems(items: List<ReceiptItem>): LongArray = dao.insertItems(items)
 
     override suspend fun delete(item: Receipt) = dao.delete(item)
 

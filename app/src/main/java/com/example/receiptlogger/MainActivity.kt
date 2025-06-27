@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraCharacteristics
+import android.icu.number.NumberFormatter
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
@@ -13,6 +15,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -62,12 +65,13 @@ import com.example.receiptlogger.data.receipt.ReceiptRepository
 import com.example.receiptlogger.ui.ReceiptLoggerScreen
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
 import kotlinx.coroutines.flow.Flow
+import java.util.Locale
 import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
 
         setContent {
             ReceiptLoggerTheme {
@@ -76,8 +80,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
 
 //@Preview(showBackground = true,
 //    device = "spec:width=1080px,height=2400px,dpi=480,navigation=buttons", showSystemUi = true)

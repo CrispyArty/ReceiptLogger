@@ -3,7 +3,7 @@ package com.example.receiptlogger.data
 
 import android.content.Context
 import com.example.receiptlogger.data.receipt.LocalReceiptRepository
-import com.example.receiptlogger.network.ReceiptService
+import com.example.receiptlogger.data.network.ReceiptService
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
@@ -29,6 +29,6 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     }
 
     override val receiptRepository: LocalReceiptRepository by lazy {
-        LocalReceiptRepository(context = context, dao = ReceiptDatabase.getDatabase(context).receiptDao())
+        LocalReceiptRepository(context = context, database = ReceiptDatabase.getDatabase(context))
     }
 }

@@ -8,6 +8,7 @@ import androidx.work.DelegatingWorkerFactory
 import com.example.receiptlogger.data.AppContainer
 import com.example.receiptlogger.data.DefaultAppContainer
 import com.example.receiptlogger.workers.MyWorkerFactory
+import java.time.ZoneId
 
 class MainApplication : Application(), Configuration.Provider {
 
@@ -23,7 +24,10 @@ class MainApplication : Application(), Configuration.Provider {
 //        }
 
         this.deleteDatabase("receipt_logger_database")
-        Log.d("gosu", "---onCreate writableDatabase: ${container.asdasd.openHelper.writableDatabase}")
+        Log.d(
+            "gosu",
+            "---onCreate writableDatabase: ${container.asdasd.openHelper.writableDatabase}"
+        )
 
 
 //        container.asdasd.clearAllTables()
@@ -39,6 +43,12 @@ class MainApplication : Application(), Configuration.Provider {
 //        Log.d("gosu", "---onCreate FLAG_DEBUGGABLE: ${isDebug}")
 
 
+    }
+
+    companion object {
+        val receiptTimeZoneId by lazy {
+            ZoneId.of("Europe/Chisinau")
+        }
     }
 
 

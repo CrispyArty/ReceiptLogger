@@ -3,6 +3,7 @@
     <string name="check_screen">Check</string>
     <string name="back_button">Back</string>
     <string name="loading">Loading</string>
+    <string name="card_receipt_pending">New receipt waiting for parse</string>
     <string name="receipt_detail_title">Receipt</string>
     <string name="add_new_receipt">Add new Receipt by camera</string>
     <string name="worker_require_input_data_key">Worker required parameter is empty</string>

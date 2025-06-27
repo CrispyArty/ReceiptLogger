@@ -27,7 +27,9 @@ object AppViewModelProvider {
         }
 
         initializer {
-            HomeViewModel()
+            HomeViewModel(
+                receiptRepository = mainApplication().container.receiptRepository
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.receiptlogger.ui.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -73,8 +74,9 @@ fun MainNavGraph(
             composable(route = HomeDestination.route) {
                 HomeScreenMin(
                     navigateToReceipt = {
-                        navController.navigate("${ReceiptDetailsDestination.route}/1")
-                    }, modifier = paddingModifier
+                        navController.navigate("${ReceiptDetailsDestination.route}/$it")
+                    },
+                    modifier = paddingModifier
                 )
             }
             composable(
@@ -84,7 +86,8 @@ fun MainNavGraph(
                 })
             ) {
                 ReceiptDetailsScreenMin(
-                    navigateBack = { navController.popBackStack() }, modifier = paddingModifier
+                    navigateBack = { navController.popBackStack() },
+                    modifier = paddingModifier
                 )
             }
         }
