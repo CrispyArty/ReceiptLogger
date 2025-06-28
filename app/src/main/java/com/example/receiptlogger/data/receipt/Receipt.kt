@@ -34,12 +34,17 @@ data class Receipt(
     @ColumnInfo(name = "address")
     val address: String? = null,
 
-
     @ColumnInfo(name = "total_price")
     val totalPrice: Money? = null,
 
+    @ColumnInfo(name = "payment_method")
+    val paymentMethod: String? = null,
+
     @ColumnInfo(name = "purchase_date")
     val purchaseDate: LocalDateTime? = null,
+
+    @ColumnInfo(name = "external_id")
+    val externalId: String? = null,
 
 //    @ColumnInfo(name = "purchase_date")
 //    val itemCounts: LocalDateTime? = null,

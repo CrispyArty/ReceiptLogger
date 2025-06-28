@@ -19,6 +19,7 @@ package com.example.receiptlogger.data.receipt
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import androidx.paging.PagingSource
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -32,11 +33,15 @@ import com.example.receiptlogger.workers.FetchAndParseReceiptWorker
 import com.example.receiptlogger.workers.TAG_FETCH_AND_PARSE
 import com.example.receiptlogger.workers.WORKER_KEY_RECEIPT_ID
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface ReceiptRepository {
-    fun getAllStream(): Flow<List<ReceiptListItem>>
-
     fun getItemStream(id: Int): Flow<Receipt?>
+
+    fun pagingSource(): PagingSource<Int, ReceiptListItem>
+
+    suspend fun countByMonth(datetime: LocalDateTime): Int
 
     suspend fun isExistByCode(qrCodeUrl: String): Boolean
 
@@ -59,9 +64,19 @@ class LocalReceiptRepository(
 
     private val workManager = WorkManager.getInstance(context)
 
-    override fun getAllStream(): Flow<List<ReceiptListItem>> = dao.getAllForList(FetchStatus.Completed)
-
     override fun getItemStream(id: Int): Flow<Receipt?> = dao.getItem(id)
+
+    override fun pagingSource(): PagingSource<Int, ReceiptListItem> =
+        dao.pagingSource(FetchStatus.Completed)
+
+    override suspend fun countByMonth(datetime: LocalDateTime): Int {
+        val month = datetime.toLocalDate().withDayOfMonth(1)
+
+        return dao.countByDateRange(
+            from = month.atStartOfDay(),
+            to = month.plusMonths(1).atStartOfDay()
+        )
+    }
 
     override suspend fun isExistByCode(qrCodeUrl: String): Boolean = dao.isExistByCode(qrCodeUrl)
 

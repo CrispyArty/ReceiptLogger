@@ -22,7 +22,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.receiptlogger.R
 import com.example.receiptlogger.ui.home.HomeDestination
-import com.example.receiptlogger.ui.home.HomeScreenMin
+import com.example.receiptlogger.ui.home.HomeScreen
 import com.example.receiptlogger.ui.receipt.ReceiptDetailsDestination
 import com.example.receiptlogger.ui.receipt.ReceiptDetailsScreenMin
 import com.example.receiptlogger.ui.scannerButton.QrCodeScanButton
@@ -72,7 +72,7 @@ fun MainNavGraph(
         ) {
             val paddingModifier = modifier.padding(innerPadding)
             composable(route = HomeDestination.route) {
-                HomeScreenMin(
+                HomeScreen(
                     navigateToReceipt = {
                         navController.navigate("${ReceiptDetailsDestination.route}/$it")
                     },

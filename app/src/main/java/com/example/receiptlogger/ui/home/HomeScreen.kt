@@ -1,5 +1,6 @@
 package com.example.receiptlogger.ui.home
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -39,12 +40,14 @@ import com.example.receiptlogger.R
 import com.example.receiptlogger.ui.AppViewModelProvider
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
 import com.example.receiptlogger.ui.topbar.ProvideAppBarTitle
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.receiptlogger.data.receipt.Receipt
 import com.example.receiptlogger.data.receipt.ReceiptListItem
 import com.example.receiptlogger.data.store.StoreData
+import com.example.receiptlogger.domain.ReceiptListItemUiModel
 import com.example.receiptlogger.types.FetchStatus
 import com.example.receiptlogger.types.Money
 import com.example.receiptlogger.types.UploadStatus
@@ -66,12 +69,25 @@ object HomeDestination : NavigationDestination {
 }
 
 @Composable
-fun HomeScreenMin(
+fun HomeScreen(
+    navigateToReceipt: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ProvideAppBarTitle {
+        Text(stringResource(HomeDestination.titleRes))
+    }
+
+    HomeBody(navigateToReceipt, modifier)
+}
+
+@Composable
+fun HomeBody(
     navigateToReceipt: (Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val uiState by viewModel.homeUiState.collectAsStateWithLifecycle()
+//    val uiState by viewModel.homeUiState.collectAsStateWithLifecycle()
+    val lazyPager = viewModel.receiptPager.collectAsLazyPagingItems()
 
     ProvideAppBarTitle {
         Text(stringResource(HomeDestination.titleRes))
@@ -80,17 +96,25 @@ fun HomeScreenMin(
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
-        when (uiState.listStatus) {
-            ListStatus.Loading -> Loading()
-            ListStatus.Success -> ItemList(
-                groupedList = uiState.groupedList,
-                onItemClick = { navigateToReceipt(it.id) },
-                contentPadding = PaddingValues(dimensionResource(R.dimen.padding_medium))
-            )
-        }
+        ItemList(
+            onItemClick = { navigateToReceipt(it.id) },
+            contentPadding = PaddingValues(dimensionResource(R.dimen.padding_medium)),
+            lazyPager = lazyPager
+        )
+
+//
+//        when (uiState.listStatus) {
+//            ListStatus.Loading -> Loading()
+//            ListStatus.Success -> ItemList(
+//                groupedList = uiState.groupedList,
+//                onItemClick = { navigateToReceipt(it.id) },
+//                contentPadding = PaddingValues(dimensionResource(R.dimen.padding_medium))
+//            )
+//        }
     }
 
 }
+
 
 @Composable
 fun Loading(
@@ -101,6 +125,7 @@ fun Loading(
         verticalArrangement = Arrangement.Center,
         modifier = modifier.fillMaxSize()
     ) {
+
         CircularProgressIndicator(
             color = MaterialTheme.colorScheme.primary,
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -113,8 +138,8 @@ fun Loading(
 
 @Composable
 fun ItemList(
-    groupedList: Map<LocalDate, List<ReceiptListItem>>,
-    onItemClick: (Receipt) -> Unit,
+    lazyPager: LazyPagingItems<UiPageItem>,
+    onItemClick: (ReceiptListItemUiModel) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -122,31 +147,44 @@ fun ItemList(
         modifier = modifier,
         contentPadding = contentPadding,
     ) {
-        groupedList.forEach { (date, records) ->
-            item(key = date) {
-                DateRow(
-                    date = date,
-                    totalPrice = records.fold(0L) { acc, item ->
-                        acc + (item.receipt.totalPrice?.cents ?: 0)
-                    }.toMoney()
-                )
+
+        lazyPager.itemSnapshotList.forEachIndexed { index, item ->
+            Log.d("gosupager", "~~~forEachIndexed: index: ${index}")
+
+            Log.d("gosupager", "item: ${item}")
+            when (item) {
+                is UiPageItem.Item -> item() {
+                    Log.d("gosupager", "~~~LazyItem: index: ${index}")
+                    val pageItem = lazyPager[index] as UiPageItem.Item
+
+                    ItemCard(
+                        receipt = pageItem.item,
+                        onItemClick = onItemClick,
+                        modifier = Modifier.padding(bottom = dimensionResource(R.dimen.padding_medium))
+                    )
+                }
+
+                is UiPageItem.MonthHeader -> stickyHeader {
+                    val monthHeader = lazyPager[index] as UiPageItem.MonthHeader
+
+                    DateRow(
+                        date = monthHeader.dateTime,
+                        totalPrice = monthHeader.totalPrice
+                    )
+                }
+
+                else -> null
             }
 
-            items(items = records, key = { it.receipt.id }) { receipt ->
-                ItemCard(
-                    receiptListItem = receipt,
-                    onItemClick = onItemClick,
-                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.padding_medium))
-                )
-            }
         }
     }
 }
 
+
 @Composable
 fun DateRow(
     date: LocalDate,
-    totalPrice: Money,
+    totalPrice: Money?,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -159,21 +197,24 @@ fun DateRow(
             text = date.format(FormatHelper.dateMonthFormatter),
             style = MaterialTheme.typography.titleMedium,
         )
-        Text(
-            text = totalPrice.formatted,
-            style = MaterialTheme.typography.titleMedium,
-        )
+
+        if (totalPrice != null) {
+            Text(
+                text = totalPrice.formatted,
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+
     }
 }
 
 
 @Composable
 fun ItemCard(
-    receiptListItem: ReceiptListItem,
-    onItemClick: (Receipt) -> Unit,
+    receipt: ReceiptListItemUiModel,
+    onItemClick: (ReceiptListItemUiModel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val receipt = receiptListItem.receipt
 //    val color by animateColorAsState(
 //        targetValue = if (receipt.totalPrice != null) MaterialTheme.colorScheme.secondaryContainer
 //        else MaterialTheme.colorScheme.surface,
@@ -204,7 +245,7 @@ fun ItemCard(
                 Column(Modifier.weight(1f)) {
                     Row {
                         Text(
-                            StoreData.findName(receipt),
+                            receipt.storeName,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Spacer(Modifier.width(dimensionResource(R.dimen.padding_tiny)))
@@ -220,13 +261,12 @@ fun ItemCard(
                             )
                         }
                     }
-                    if (receipt.fetchStatus == FetchStatus.Completed) {
-                        Text("${receipt.purchaseDate!!.formatted} / ${receipt.totalPrice!!.formatted}")
-                    }
+
+                    Text("${receipt.purchaseDate.formatted} / ${receipt.totalPrice.formatted}")
                 }
 
                 Text(
-                    text = receiptListItem.itemCount.toString(),
+                    text = receipt.itemCount.toString(),
                     style = MaterialTheme.typography.titleLarge,
 //                    modifier = Modifier.align(Alignment.CenterVertically)
                 )
@@ -254,72 +294,72 @@ fun LoadingPreview() {
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun ItemListPreview() {
-    ReceiptLoggerTheme {
-        ItemList(
-            onItemClick = {},
-            groupedList = mapOf<LocalDate, List<ReceiptListItem>>(
-                LocalDate.now() to listOf(
-                    ReceiptListItem(
-                        receipt = Receipt(
-                            id = 1,
-                            qrCodeUrl = "https://example.com",
-                            codFiscal = "12323423",
-                            registrationNumber = "123234234",
-                            address = "st. example",
-                            totalPrice = 2812212.8f.toMoney(),
-                            purchaseDate = LocalDateTime.now(),
-                            fetchStatus = FetchStatus.Completed,
-                            uploadStatus = UploadStatus.Uploaded,
-                        ),
-                        itemCount = 15
-                    ),
-                    ReceiptListItem(
-                        receipt = Receipt(
-                            id = 2,
-                            qrCodeUrl = "https://example.com",
-                            codFiscal = "12323423",
-                            registrationNumber = "123234234",
-                            address = "st. example",
-                            totalPrice = 2812212.8f.toMoney(),
-                            purchaseDate = LocalDateTime.now(),
-                            fetchStatus = FetchStatus.Completed,
-                            uploadStatus = UploadStatus.Uploaded,
-                        ),
-                        itemCount = 15
-                    ),
-                )
-            ),
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun ItemListPreview() {
+//    ReceiptLoggerTheme {
+//        ItemList(
+//            onItemClick = {},
+//            groupedList = mapOf<LocalDate, List<ReceiptListItem>>(
+//                LocalDate.now() to listOf(
+//                    ReceiptListItem(
+//                        receipt = Receipt(
+//                            id = 1,
+//                            qrCodeUrl = "https://example.com",
+//                            codFiscal = "12323423",
+//                            registrationNumber = "123234234",
+//                            address = "st. example",
+//                            totalPrice = 2812212.8f.toMoney(),
+//                            purchaseDate = LocalDateTime.now(),
+//                            fetchStatus = FetchStatus.Completed,
+//                            uploadStatus = UploadStatus.Uploaded,
+//                        ),
+//                        itemCount = 15
+//                    ),
+//                    ReceiptListItem(
+//                        receipt = Receipt(
+//                            id = 2,
+//                            qrCodeUrl = "https://example.com",
+//                            codFiscal = "12323423",
+//                            registrationNumber = "123234234",
+//                            address = "st. example",
+//                            totalPrice = 2812212.8f.toMoney(),
+//                            purchaseDate = LocalDateTime.now(),
+//                            fetchStatus = FetchStatus.Completed,
+//                            uploadStatus = UploadStatus.Uploaded,
+//                        ),
+//                        itemCount = 15
+//                    ),
+//                )
+//            ),
+//        )
+//    }
+//}
 
 
-@Preview
-@Composable
-fun InventoryItemPreview() {
-    polygon()
-    ReceiptLoggerTheme {
-        ItemCard(
-            ReceiptListItem(
-                receipt = Receipt(
-                    qrCodeUrl = "https://example.com",
-                    codFiscal = "12323423",
-                    registrationNumber = "123234234",
-                    address = "st. example",
-                    totalPrice = 2812212.8f.toMoney(),
-                    purchaseDate = LocalDateTime.now(),
-                    fetchStatus = FetchStatus.Completed,
-                    uploadStatus = UploadStatus.Uploaded,
-                ),
-                itemCount = 15
-            ),
-            onItemClick = {}
-        )
-    }
-}
+//@Preview
+//@Composable
+//fun InventoryItemPreview() {
+//    polygon()
+//    ReceiptLoggerTheme {
+//        ItemCard(
+//            ReceiptListItem(
+//                receipt = Receipt(
+//                    qrCodeUrl = "https://example.com",
+//                    codFiscal = "12323423",
+//                    registrationNumber = "123234234",
+//                    address = "st. example",
+//                    totalPrice = 2812212.8f.toMoney(),
+//                    purchaseDate = LocalDateTime.now(),
+//                    fetchStatus = FetchStatus.Completed,
+//                    uploadStatus = UploadStatus.Uploaded,
+//                ),
+//                itemCount = 15
+//            ),
+//            onItemClick = {}
+//        )
+//    }
+//}
 
 
 //@Preview(showBackground = true)

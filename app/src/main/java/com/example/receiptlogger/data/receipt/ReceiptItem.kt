@@ -28,17 +28,3 @@ data class ReceiptItem(
     @ColumnInfo(name = "receipt_id", index = true)
     val receiptId: Int,
 )
-
-fun q(sql: String): String {
-    return sql
-}
-
-val sql = "SELECT * " +
-        "FROM receipts " +
-        "ORDER BY purchase_date DESC"
-
-var w = q(
-    "SELECT * " +
-            "FROM receipts " +
-            "ORDER BY purchase_date DESC"
-)

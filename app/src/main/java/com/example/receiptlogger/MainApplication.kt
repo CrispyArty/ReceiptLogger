@@ -23,7 +23,7 @@ class MainApplication : Application(), Configuration.Provider {
 //            // do something for a debug build
 //        }
 
-        this.deleteDatabase("receipt_logger_database")
+//        this.deleteDatabase("receipt_logger_database")
         Log.d(
             "gosu",
             "---onCreate writableDatabase: ${container.asdasd.openHelper.writableDatabase}"

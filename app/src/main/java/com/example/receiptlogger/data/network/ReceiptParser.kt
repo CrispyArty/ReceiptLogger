@@ -1,27 +1,32 @@
 package com.example.receiptlogger.data.network
 
+import androidx.compose.ui.text.substring
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.text.replace
 
 
 class ParseErrorException(message: String) : Exception(message)
 
-class ReceiptHtmlParser(val html: String) {
+class ReceiptParser(val html: String) {
 
-    val formatter by lazy {
-        DateTimeFormatter.ofPattern("'DATA' dd.MM.yyyy 'ORA' HH:mm:ss")
+    val dateFormatter: DateTimeFormatter by lazy {
+        DateTimeFormatter.ofPattern("'DATA'dd.MM.yyyy'ORA'HH:mm:ss")
     }
 
     data class Check(
         var codFiscal: String = "",
         var registrationNumber: String = "",
         var address: String = "",
-        var description: String = "",
+        var header: String = "",
         val items: MutableList<CheckItem> = mutableListOf(),
         var totalPrice: Float = 0.0f,
-        var purchaseDate: LocalDateTime = LocalDateTime.now(),
+        var purchaseDate: LocalDateTime = LocalDateTime.now().minusMonths(1),
+        var html: String = "",
+        var paymentMethod: String = "",
+        var id: String = ""
     )
 
     data class CheckItem(
@@ -38,17 +43,21 @@ class ReceiptHtmlParser(val html: String) {
     fun parse(): Check {
         var checkParseGroupIndex = 0
         var isSecondLine = false
-        var isDateParsed = false
+        val checkParseGroups = arrayOf<String>(
+            "header",
+            "items",
+            "total",
+            "taxes",
+            "paymentMethod",
+            "infoFooter",
+            "footer"
+        )
+        var preFooterIndex = 0
+        var headerIndex = 0
 
-        val checkParseGroups = arrayOf<String>("desc", "items", "total", "tax", "card", "date")
-
-//        var description = ""
-//        var fullPrice = 0.0f
-//        val receiptItems = mutableListOf<ReceiptItem>()
-
-        val check = Check()
-
-//        Log.d("Gosu", doc.select(".font-monospace").text())
+        val check = Check(
+            html = doc.select(".font-monospace > div").text()
+        )
 
         doc.select(".font-monospace > div").forEach {
 //            Log.d("Gosu", "--------------------${checkParseGroupIndex}")
@@ -64,7 +73,20 @@ class ReceiptHtmlParser(val html: String) {
             }
 
             when (checkParseGroups[checkParseGroupIndex]) {
-                "desc" -> check.description += parseDescription(it)
+                "header" -> {
+                    when (headerIndex) {
+                        0 -> check.header = it.text()
+                        1 -> check.codFiscal = parseFieldValue(it, "COD FISCAL:")
+                        2 -> check.address = it.text()
+                        3 -> check.registrationNumber =
+                            parseFieldValue(it, "NUMARUL DE ÎNREGISTRARE:")
+
+                        else -> check.header += "\n${it.text()}"
+                    }
+
+                    headerIndex++
+                }
+
                 "items" ->
                     if (!isSecondLine) {
                         val checkItem = parseReceiptItem(it)
@@ -81,10 +103,19 @@ class ReceiptHtmlParser(val html: String) {
                     }
 
                 "total" -> check.totalPrice = parseCheckTotalPrice(it)
-//                "date" -> if (!isDateParsed) {
-////                    parseCheckTotalPrice(check, it.child(0).text(), it.child(1).text())
-//                    isDateParsed = true
-//                }
+                "paymentMethod" -> {
+                    check.paymentMethod = it.child(0).text().trim()
+                }
+                "infoFooter" -> {
+                    when (preFooterIndex) {
+                        0 -> check.purchaseDate = parsePurchaseDate(it)
+                    }
+                    preFooterIndex++
+                }
+                "footer" -> {
+                    check.id = it.text().trim()
+                }
+
                 else -> return@forEach
             }
         }
@@ -97,11 +128,8 @@ class ReceiptHtmlParser(val html: String) {
         return check
     }
 
-
-    private fun parseDescription(row: Element): String {
-//        Log.d("Gosu", "addDescription: ${desc}")
-
-        return "${row.text()}\n"
+    private fun parseFieldValue(row: Element, name: String): String {
+        return "${row.text().replace(name, "").trim()}\n"
     }
 
     private fun parseReceiptItem(row: Element): CheckItem? {
@@ -135,10 +163,11 @@ class ReceiptHtmlParser(val html: String) {
         return parsedPrice.toFloatOrNull() ?: 0.0f
     }
 
-//    private fun addCheckDate(check: Check, date: String) {
-//    LocalDate.parse("${date} ${time}")
-//        check.date = ""
-//    }
+    private fun parsePurchaseDate(row: Element): LocalDateTime {
+        val str = row.text().replace("\\s".toRegex(), "")
+
+        return LocalDateTime.parse(str, dateFormatter)
+    }
 
     private fun parseCheckTotalPrice(row: Element): Float {
         val price = row.child(1).text()

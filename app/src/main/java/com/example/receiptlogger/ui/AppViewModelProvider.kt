@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.example.receiptlogger.MainApplication
 import com.example.receiptlogger.ui.home.HomeViewModel
 import com.example.receiptlogger.ui.scannerButton.QrCodeScanViewModal
@@ -28,6 +30,14 @@ object AppViewModelProvider {
 
         initializer {
             HomeViewModel(
+                pager = Pager(
+                    config = PagingConfig(
+                        pageSize = 10,
+                        initialLoadSize = 20,
+//                        maxSize = 20
+                    ),
+                    pagingSourceFactory = { mainApplication().container.receiptRepository.pagingSource() }
+                ),
                 receiptRepository = mainApplication().container.receiptRepository
             )
         }

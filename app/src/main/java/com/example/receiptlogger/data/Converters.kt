@@ -5,6 +5,7 @@ import com.example.receiptlogger.MainApplication
 import com.example.receiptlogger.types.Money
 import com.example.receiptlogger.types.toMoney
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.TimeZone
