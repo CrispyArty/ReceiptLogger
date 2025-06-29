@@ -14,7 +14,6 @@ class MainApplication : Application(), Configuration.Provider {
 
     lateinit var container: AppContainer
 
-
     override fun onCreate() {
         super.onCreate()
         container = DefaultAppContainer(this)
@@ -24,31 +23,10 @@ class MainApplication : Application(), Configuration.Provider {
 //        }
 
 //        this.deleteDatabase("receipt_logger_database")
-        Log.d(
-            "gosu",
-            "---onCreate writableDatabase: ${container.asdasd.openHelper.writableDatabase}"
-        )
-
-
-//        container.asdasd.clearAllTables()
-//        Log.d("gosu", "---onCreate: ${container.receiptRepository}")
-//        Log.d("gosu", "---onCreate asdasd: ${container.asdasd}")
-//        Log.d("gosu", "---onCreate isOpen: ${container.asdasd.isOpen}")
-//        Log.d("gosu", "---onCreate isOpen: ${container.asdasd.isOpen}")
-//        Log.d("gosu", "---onCreate ApplicationInfo: ${applicationInfo}")
-//        Log.d("gosu", "---onCreate ApplicationInfo debug: ${applicationInfo.flags}")
-
-//        val isDebug = 0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE
-//        Log.d("gosu", "---onCreate FLAG_DEBUGGABLE: ${applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE}")
-//        Log.d("gosu", "---onCreate FLAG_DEBUGGABLE: ${isDebug}")
-
-
-    }
-
-    companion object {
-        val receiptTimeZoneId by lazy {
-            ZoneId.of("Europe/Chisinau")
-        }
+//        Log.d(
+//            "gosu",
+//            "---onCreate writableDatabase: ${container.asdasd.openHelper.writableDatabase}"
+//        )
     }
 
 

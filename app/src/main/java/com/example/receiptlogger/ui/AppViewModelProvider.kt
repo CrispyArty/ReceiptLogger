@@ -2,6 +2,7 @@ package com.example.receiptlogger.ui
 
 import android.app.Application
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -9,7 +10,9 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.example.receiptlogger.MainApplication
 import com.example.receiptlogger.ui.home.HomeViewModel
+import com.example.receiptlogger.ui.receipt.ReceiptDetailsViewModel
 import com.example.receiptlogger.ui.scannerButton.QrCodeScanViewModal
+import com.example.receiptlogger.ui.topbar.TopBarViewModal
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
@@ -21,6 +24,19 @@ object AppViewModelProvider {
 //        }
 
         // Initializer for HomeViewModel
+
+        initializer {
+            ReceiptDetailsViewModel(
+                savedStateHandle = this.createSavedStateHandle(),
+                receiptRepository = mainApplication().container.receiptRepository,
+            )
+        }
+
+        initializer {
+            TopBarViewModal(
+                receiptRepository = mainApplication().container.receiptRepository
+            )
+        }
 
         initializer {
             QrCodeScanViewModal(

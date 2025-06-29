@@ -54,6 +54,12 @@ interface ReceiptDao {
     @Query("SELECT * from receipts WHERE id = :id")
     fun getItem(id: Int): Flow<Receipt>
 
+    @Query("SELECT * " +
+            "FROM receipts " +
+            "LEFT JOIN receipt_items ON receipts.id = receipt_items.receipt_id " +
+            "WHERE receipts.id = :id")
+    fun getWithItems(id: Int): Flow<ReceiptWithItems?>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(item: Receipt): Long
 

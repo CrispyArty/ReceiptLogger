@@ -1,4 +1,4 @@
-package com.example.receiptlogger.data.network
+package com.example.receiptlogger.network
 
 import retrofit2.http.GET
 import retrofit2.http.Path

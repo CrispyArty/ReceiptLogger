@@ -4,18 +4,22 @@ import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -28,6 +32,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
@@ -41,9 +46,14 @@ import com.example.receiptlogger.ui.AppViewModelProvider
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
 import com.example.receiptlogger.ui.topbar.ProvideAppBarTitle
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.map
 import com.example.receiptlogger.data.receipt.Receipt
 import com.example.receiptlogger.data.receipt.ReceiptListItem
 import com.example.receiptlogger.data.store.StoreData
@@ -53,7 +63,10 @@ import com.example.receiptlogger.types.Money
 import com.example.receiptlogger.types.UploadStatus
 import com.example.receiptlogger.types.toMoney
 import com.example.receiptlogger.ui.FormatHelper
+import com.example.receiptlogger.ui.components.Loading
 import com.example.receiptlogger.ui.formatted
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -96,45 +109,18 @@ fun HomeBody(
     Surface(
         modifier = modifier.fillMaxSize()
     ) {
-        ItemList(
-            onItemClick = { navigateToReceipt(it.id) },
-            contentPadding = PaddingValues(dimensionResource(R.dimen.padding_medium)),
-            lazyPager = lazyPager
-        )
-
-//
-//        when (uiState.listStatus) {
-//            ListStatus.Loading -> Loading()
-//            ListStatus.Success -> ItemList(
-//                groupedList = uiState.groupedList,
-//                onItemClick = { navigateToReceipt(it.id) },
-//                contentPadding = PaddingValues(dimensionResource(R.dimen.padding_medium))
-//            )
-//        }
+        when (lazyPager.loadState.refresh) {
+            is LoadState.Loading -> Loading()
+            else -> ItemList(
+                onItemClick = { navigateToReceipt(it.id) },
+                contentPadding = PaddingValues(top = 8.dp),
+                lazyPager = lazyPager
+            )
+        }
     }
 
 }
 
-
-@Composable
-fun Loading(
-    modifier: Modifier = Modifier
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier.fillMaxSize()
-    ) {
-
-        CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            modifier = Modifier
-        )
-    }
-
-
-}
 
 @Composable
 fun ItemList(
@@ -147,33 +133,47 @@ fun ItemList(
         modifier = modifier,
         contentPadding = contentPadding,
     ) {
+        if (lazyPager.itemCount == 0) {
+            item {
+                Text(
+                    text = "Receipts not found",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.padding_medium))
+                        .wrapContentWidth(Alignment.CenterHorizontally),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        } else {
+            lazyPager.itemSnapshotList.forEachIndexed { index, item ->
+                when (item) {
+                    is UiPageItem.Item -> item() {
+                        val pageItem = lazyPager[index] as UiPageItem.Item
 
-        lazyPager.itemSnapshotList.forEachIndexed { index, item ->
-            Log.d("gosupager", "~~~forEachIndexed: index: ${index}")
+                        ItemCard(
+                            receipt = pageItem.item,
+                            onItemClick = onItemClick,
+                            modifier = Modifier.padding(
+                                start = dimensionResource(R.dimen.padding_medium),
+                                end = dimensionResource(R.dimen.padding_medium),
+                                bottom = dimensionResource(R.dimen.padding_medium)
+                            )
+                        )
+                    }
 
-            Log.d("gosupager", "item: ${item}")
-            when (item) {
-                is UiPageItem.Item -> item() {
-                    Log.d("gosupager", "~~~LazyItem: index: ${index}")
-                    val pageItem = lazyPager[index] as UiPageItem.Item
+                    is UiPageItem.MonthHeader -> stickyHeader {
+                        val monthHeader = lazyPager[index] as UiPageItem.MonthHeader
 
-                    ItemCard(
-                        receipt = pageItem.item,
-                        onItemClick = onItemClick,
-                        modifier = Modifier.padding(bottom = dimensionResource(R.dimen.padding_medium))
-                    )
+                        DateRow(
+                            date = monthHeader.dateTime,
+                            totalPrice = monthHeader.totalPrice,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
+                    else -> null
                 }
 
-                is UiPageItem.MonthHeader -> stickyHeader {
-                    val monthHeader = lazyPager[index] as UiPageItem.MonthHeader
-
-                    DateRow(
-                        date = monthHeader.dateTime,
-                        totalPrice = monthHeader.totalPrice
-                    )
-                }
-
-                else -> null
             }
 
         }
@@ -183,7 +183,7 @@ fun ItemList(
 
 @Composable
 fun DateRow(
-    date: LocalDate,
+    date: LocalDateTime,
     totalPrice: Money?,
     modifier: Modifier = Modifier
 ) {
@@ -191,7 +191,13 @@ fun DateRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = dimensionResource(R.dimen.padding_small))
+            .background(MaterialTheme.colorScheme.surface)
+//            .background(Color.White)
+            .padding(
+                start = dimensionResource(R.dimen.padding_small),
+                end = dimensionResource(R.dimen.padding_small),
+                bottom = dimensionResource(R.dimen.padding_small),
+            )
     ) {
         Text(
             text = date.format(FormatHelper.dateMonthFormatter),
@@ -239,127 +245,175 @@ fun ItemCard(
                 onItemClick(receipt)
             })
         ) {
-            Row(
+            Column(
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_medium)),
             ) {
-                Column(Modifier.weight(1f)) {
-                    Row {
-                        Text(
-                            receipt.storeName,
-                            style = MaterialTheme.typography.titleLarge
+                Row(
+                    modifier = Modifier.padding(0.dp)
+                ) {
+                    Text(
+                        receipt.storeName,
+                        style = MaterialTheme.typography.titleLarge,
+                        color =
+                            if (receipt.storeName == "Unknow") {
+                                MaterialTheme.colorScheme.secondary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                    )
+                    Spacer(Modifier.width(dimensionResource(R.dimen.padding_tiny)))
+
+                    if (receipt.uploadStatus == UploadStatus.Uploaded) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Uploaded",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(dimensionResource(R.dimen.padding_large))
+                                .align(Alignment.CenterVertically)
                         )
-                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_tiny)))
-
-                        if (receipt.uploadStatus == UploadStatus.Uploaded) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Uploaded",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .size(dimensionResource(R.dimen.padding_large))
-                                    .align(Alignment.CenterVertically)
-                            )
-                        }
                     }
+                    Spacer(
+                        Modifier
+                            .width(dimensionResource(R.dimen.padding_small))
+                            .weight(1f)
+                    )
 
-                    Text("${receipt.purchaseDate.formatted} / ${receipt.totalPrice.formatted}")
+                    Text(
+                        text = receipt.totalPrice.formatted,
+                        style = MaterialTheme.typography.titleLarge,
+//                    modifier = Modifier.align(Alignment.CenterVertically)
+                    )
                 }
 
-                Text(
-                    text = receipt.itemCount.toString(),
-                    style = MaterialTheme.typography.titleLarge,
-//                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
+                Row {
+                    Text(
+                        text = receipt.address,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(
+                        Modifier
+                            .width(dimensionResource(R.dimen.padding_small))
+                    )
+
+                    Text(
+                        receipt.purchaseDate.format(FormatHelper.dateOfTheWeekFormatter),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+//                        modifier = Modifier.weight(2f, false),
+//                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
-            if (receipt.uploadStatus == UploadStatus.Pending) {
-                LinearProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomStart),
-                )
-            }
+//            if (receipt.uploadStatus == UploadStatus.Pending) {
+//                LinearProgressIndicator(
+//                    color = MaterialTheme.colorScheme.primary,
+//                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .align(Alignment.BottomStart),
+//                )
+//            }
         }
     }
 }
 
-@Preview(showBackground = true)
+
+@Preview(showBackground = true, backgroundColor = 0xFFCCCCCC)
 @Composable
-fun LoadingPreview() {
+fun ItemListPreview() {
     ReceiptLoggerTheme {
-        Loading()
+        val pageItems: List<UiPageItem> = listOf(
+            UiPageItem.MonthHeader(
+                LocalDateTime.now(),
+                228.30.toMoney()
+            ),
+            UiPageItem.Item(
+                ReceiptListItemUiModel(
+                    id = 1,
+                    storeName = "Linella",
+                    address = "st. example",
+                    totalPrice = 2812212.8f.toMoney(),
+                    purchaseDate = LocalDateTime.now(),
+                    uploadStatus = UploadStatus.Uploaded,
+                    itemCount = 15
+                )
+            ),
+            UiPageItem.Item(
+                ReceiptListItemUiModel(
+                    id = 2,
+                    storeName = "Linella",
+                    address = "st. example",
+                    totalPrice = 2812212.8f.toMoney(),
+                    purchaseDate = LocalDateTime.now(),
+                    uploadStatus = UploadStatus.Uploaded,
+                    itemCount = 17
+                )
+            ),
+            UiPageItem.MonthHeader(
+                LocalDateTime.now(),
+                228.30.toMoney()
+            ),
+
+            UiPageItem.Item(
+                ReceiptListItemUiModel(
+                    id = 2,
+                    storeName = "Linella",
+                    address = "st. example",
+                    totalPrice = 2812212.8f.toMoney(),
+                    purchaseDate = LocalDateTime.now(),
+                    uploadStatus = UploadStatus.Uploaded,
+                    itemCount = 17
+                )
+            ),
+        )
+
+        val flow: Flow<PagingData<UiPageItem>> = flowOf(PagingData.from(pageItems))
+
+        ItemList(
+            onItemClick = {},
+            lazyPager = flow.collectAsLazyPagingItems(),
+        )
     }
 }
 
 
-//@Preview(showBackground = true)
-//@Composable
-//fun ItemListPreview() {
-//    ReceiptLoggerTheme {
-//        ItemList(
-//            onItemClick = {},
-//            groupedList = mapOf<LocalDate, List<ReceiptListItem>>(
-//                LocalDate.now() to listOf(
-//                    ReceiptListItem(
-//                        receipt = Receipt(
-//                            id = 1,
-//                            qrCodeUrl = "https://example.com",
-//                            codFiscal = "12323423",
-//                            registrationNumber = "123234234",
-//                            address = "st. example",
-//                            totalPrice = 2812212.8f.toMoney(),
-//                            purchaseDate = LocalDateTime.now(),
-//                            fetchStatus = FetchStatus.Completed,
-//                            uploadStatus = UploadStatus.Uploaded,
-//                        ),
-//                        itemCount = 15
-//                    ),
-//                    ReceiptListItem(
-//                        receipt = Receipt(
-//                            id = 2,
-//                            qrCodeUrl = "https://example.com",
-//                            codFiscal = "12323423",
-//                            registrationNumber = "123234234",
-//                            address = "st. example",
-//                            totalPrice = 2812212.8f.toMoney(),
-//                            purchaseDate = LocalDateTime.now(),
-//                            fetchStatus = FetchStatus.Completed,
-//                            uploadStatus = UploadStatus.Uploaded,
-//                        ),
-//                        itemCount = 15
-//                    ),
-//                )
-//            ),
-//        )
-//    }
-//}
+@Preview(showBackground = true, backgroundColor = 0xFFCCCCCC)
+@Composable
+fun EmptyItemListPreview() {
+    ReceiptLoggerTheme {
+        val pageItems: List<UiPageItem> = listOf()
+
+        val flow: Flow<PagingData<UiPageItem>> = flowOf(PagingData.from(pageItems))
+
+        ItemList(
+            onItemClick = {},
+            lazyPager = flow.collectAsLazyPagingItems(),
+        )
+    }
+}
 
 
-//@Preview
-//@Composable
-//fun InventoryItemPreview() {
-//    polygon()
-//    ReceiptLoggerTheme {
-//        ItemCard(
-//            ReceiptListItem(
-//                receipt = Receipt(
-//                    qrCodeUrl = "https://example.com",
-//                    codFiscal = "12323423",
-//                    registrationNumber = "123234234",
-//                    address = "st. example",
-//                    totalPrice = 2812212.8f.toMoney(),
-//                    purchaseDate = LocalDateTime.now(),
-//                    fetchStatus = FetchStatus.Completed,
-//                    uploadStatus = UploadStatus.Uploaded,
-//                ),
-//                itemCount = 15
-//            ),
-//            onItemClick = {}
-//        )
-//    }
-//}
+@Preview
+@Composable
+fun InventoryItemPreview() {
+    ReceiptLoggerTheme {
+        ItemCard(
+            ReceiptListItemUiModel(
+                id = 1,
+                storeName = "2812212281221",
+                address = "st. example st. example st. example st. example st. example st. example st. example ",
+                totalPrice = 2812212.8f.toMoney(),
+                purchaseDate = LocalDateTime.now(),
+                uploadStatus = UploadStatus.Pending,
+                itemCount = 15
+            ),
+            onItemClick = {}
+        )
+    }
+}
 
 
 //@Preview(showBackground = true)
@@ -369,72 +423,3 @@ fun LoadingPreview() {
 //        HomeScreen(navigateToReceipt = {})
 //    }
 //}
-
-
-fun polygon() {
-//
-//    var f = 225.32f
-//
-//    println(f.toBigDecimal())
-//    println(f.toDouble())
-//
-//    println((f.toDouble() * 100))
-//
-//    println(((22_532).toDouble() / 100))
-//    println(((22_532L).toDouble() / 100))
-
-
-    val datetime = LocalDateTime.now()
-
-    val str = "2025-06-26T02:42:12.20";
-    val compareDatetime = LocalDateTime.parse(str)
-
-    val d1 = datetime.toLocalDate().withDayOfMonth(1)
-    val d2 = compareDatetime.toLocalDate().withDayOfMonth(1)
-
-    println("mount1: ${d1} == ${d2} : ${d1 == d2}")
-
-    val zoneId = ZoneId.of("Europe/Chisinau")
-
-    datetime.atOffset(zoneId.rules.getOffset(datetime))
-//    Timestamp.from(datetime)
-//    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-    val formatter = DateTimeFormatter.ofPattern("'DATA' dd.MM.yyyy 'ORA' HH:mm:ss");
-
-    println("datetime.parse: ${LocalDateTime.parse("DATA 12.03.2025 ORA 19:43:56", formatter)}")
-
-    println("datetime.now: ${datetime}")
-    println("datetime.now: ${datetime.atZone(zoneId)}")
-
-//    println("test: ${datetime.toEpochSecond(zoneId.rules.getOffset(datetime))}")
-
-    val instant = ZonedDateTime.now().toInstant()
-    println("from instant: ${instant.atZone(zoneId).toLocalDateTime()}")
-
-
-    println("ZonedDateTime.now: ${ZonedDateTime.now().toInstant()}")
-    println("ZonedDateTime.now: ${ZonedDateTime.now()}")
-
-
-    println("datetime.now: ${datetime.atOffset(zoneId.rules.getOffset(datetime))}")
-
-
-    println("parse: ${LocalDateTime.parse(str)}")
-    println("parses at Zone: ${LocalDateTime.parse(str).atZone(TimeZone.getDefault().toZoneId())}")
-
-//    TimeZone.getDefault().toZoneId()
-//    println("parse with Zone: ${LocalDateTime.parse(str).atZone()}")
-
-//    println("datetime${datetime.toInstant(ZoneOffset.UTC)}")
-//    println("zones: ${ZoneId.getAvailableZoneIds()}")
-
-
-//    ZoneOffset.from(
-//    )
-
-
-    println("datetime${datetime.toInstant(zoneId.rules.getOffset(datetime)).epochSecond}")
-
-//    Text("Gosu1")
-
-}

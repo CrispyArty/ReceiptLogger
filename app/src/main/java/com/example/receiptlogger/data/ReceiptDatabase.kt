@@ -40,10 +40,10 @@ abstract class ReceiptDatabase : RoomDatabase() {
                     ReceiptDatabase::class.java,
                     "receipt_logger_database"
                 )
-                    .fallbackToDestructiveMigration(true)
-                    .setQueryCallback({ sqlQuery, bindArgs ->
-                        Log.d("SQL", "SQL Query: $sqlQuery SQL Args: $bindArgs")
-                    }, Executors.newSingleThreadExecutor())
+//                    .fallbackToDestructiveMigration(true)
+//                    .setQueryCallback({ sqlQuery, bindArgs ->
+//                        Log.d("SQL", "SQL Query: $sqlQuery SQL Args: $bindArgs")
+//                    }, Executors.newSingleThreadExecutor())
                     .build()
                     .also { Instance = it }
             }

@@ -22,21 +22,29 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -92,7 +100,6 @@ class QrCodeAnalyzer(
 
         scanner.process(image)
             .addOnSuccessListener { barcodes ->
-//                Log.d("gosu", "barcodes: ${barcodes}")
 
                 if (barcodes.isNotEmpty()) {
                     onQrCodeScanned(barcodes.first())
@@ -112,19 +119,17 @@ class ScannerActivity : ComponentActivity() {
 
         setContent {
             ReceiptLoggerTheme {
-//                Log.d("gosu", "intent: ${intent}")
-//                Log.d("gosu", "intent: ${intent.action}")
 
                 val returnedIntent = Intent()
 
-                var context = LocalContext.current
+                val context = LocalContext.current
 
                 var hasCameraPermission by remember {
                     mutableStateOf(
                         ContextCompat.checkSelfPermission(
                             context,
                             Manifest.permission.CAMERA
-                        ) == PackageManager.PERMISSION_DENIED
+                        ) == PackageManager.PERMISSION_GRANTED
                     )
                 }
 
@@ -153,67 +158,80 @@ class ScannerActivity : ComponentActivity() {
 
 @Composable
 fun CameraView(onScan: (Barcode) -> Unit, modifier: Modifier = Modifier) {
-    var context = LocalContext.current
+    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var preview by remember { mutableStateOf<Preview?>(null) }
 
-    Column(
-        modifier = modifier
-            .size(400.dp)
-            .padding(16.dp)
-    ) {
-        AndroidView(
-            factory = { androidViewContext ->
-                PreviewView(androidViewContext).apply {
-                    this.scaleType = PreviewView.ScaleType.FILL_START
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    implementationMode =
-                        PreviewView.ImplementationMode.COMPATIBLE
-                }
-            },
-            update = { previewView ->
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                val cameraExecutor: ExecutorService =
-                    Executors.newSingleThreadExecutor()
-                val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
-                    ProcessCameraProvider.getInstance(context)
-
-                cameraProviderFuture.addListener({
-                    preview = Preview.Builder().build().also {
-                        it.surfaceProvider = previewView.surfaceProvider
-                    }
-
-                    val cameraProvider: ProcessCameraProvider =
-                        cameraProviderFuture.get()
-
-                    val barcodeAnalyzer = QrCodeAnalyzer { result ->
-                        onScan(result)
-                    }
-                    val imageAnalysis: ImageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(cameraExecutor, barcodeAnalyzer)
-                        }
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
+    Scaffold { innerPadding ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Text(
+                text = stringResource(R.string.scanner_please_scan_qr_code),
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.inverseSurface)
+                    .wrapContentWidth(align = Alignment.CenterHorizontally)
+                    .padding(dimensionResource(R.dimen.padding_medium))
+            )
+            AndroidView(
+                factory = { androidViewContext ->
+                    PreviewView(androidViewContext).apply {
+                        this.scaleType = PreviewView.ScaleType.FILL_START
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
                         )
-                    } catch (e: Exception) {
-                        Log.e("Scanner", "CameraPreview: ${e.localizedMessage}")
+                        implementationMode =
+                            PreviewView.ImplementationMode.COMPATIBLE
                     }
-                }, ContextCompat.getMainExecutor(context))
-            },
-            modifier = Modifier.fillMaxSize(),
-        )
+                },
+                update = { previewView ->
+                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                    val cameraExecutor: ExecutorService =
+                        Executors.newSingleThreadExecutor()
+                    val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+                        ProcessCameraProvider.getInstance(context)
+
+                    cameraProviderFuture.addListener({
+                        preview = Preview.Builder().build().also {
+                            it.surfaceProvider = previewView.surfaceProvider
+                        }
+
+                        val cameraProvider: ProcessCameraProvider =
+                            cameraProviderFuture.get()
+
+                        val barcodeAnalyzer = QrCodeAnalyzer { result ->
+                            onScan(result)
+                        }
+                        val imageAnalysis: ImageAnalysis = ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build()
+                            .also {
+                                it.setAnalyzer(cameraExecutor, barcodeAnalyzer)
+                            }
+                        try {
+                            cameraProvider.unbindAll()
+                            cameraProvider.bindToLifecycle(
+                                lifecycleOwner,
+                                cameraSelector,
+                                preview,
+                                imageAnalysis
+                            )
+                        } catch (e: Exception) {
+                            Log.e("Scanner", "CameraPreview: ${e.localizedMessage}")
+                        }
+                    }, ContextCompat.getMainExecutor(context))
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
     }
 
 }
@@ -225,7 +243,6 @@ private fun PermissionDialogs(
     onChange: (Boolean) -> Unit,
     onDismiss: () -> Unit
 ) {
-    LocalOnBackPressedDispatcherOwner.current
     var permissionOpenDialog by remember { mutableStateOf(false) }
     var rationalPermissionOpenDialog by remember { mutableStateOf(false) }
 
@@ -233,7 +250,7 @@ private fun PermissionDialogs(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (!isGranted) {
-                if (activity.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                if (activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                     rationalPermissionOpenDialog = true
                 } else {
                     permissionOpenDialog = true
@@ -266,7 +283,7 @@ private fun PermissionDialogs(
             })
     }
 
-    SideEffect {
+    LaunchedEffect(launcher) {
         launcher.launch(Manifest.permission.CAMERA)
     }
 }
@@ -334,3 +351,12 @@ fun ShowRationalPermissionDialog(
     )
 }
 
+//@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
+//@Composable
+//fun PreviewScanner() {
+//    ReceiptLoggerTheme {
+//        CameraView(
+//            onScan = {}
+//        )
+//    }
+//}

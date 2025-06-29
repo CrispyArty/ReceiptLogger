@@ -6,6 +6,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 import com.example.receiptlogger.types.FetchStatus
 import com.example.receiptlogger.types.Money
 import com.example.receiptlogger.types.UploadStatus
@@ -64,4 +65,14 @@ data class ReceiptListItem(
     @Embedded val receipt: Receipt,
 
     val itemCount: Int
+)
+
+data class ReceiptWithItems(
+    @Embedded val receipt: Receipt,
+
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "receipt_id"
+    )
+    val items: List<ReceiptItem>
 )

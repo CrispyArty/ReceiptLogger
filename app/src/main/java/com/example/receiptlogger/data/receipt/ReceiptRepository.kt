@@ -26,6 +26,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.example.receiptlogger.data.ReceiptDatabase
 import com.example.receiptlogger.types.FetchStatus
@@ -33,10 +34,13 @@ import com.example.receiptlogger.workers.FetchAndParseReceiptWorker
 import com.example.receiptlogger.workers.TAG_FETCH_AND_PARSE
 import com.example.receiptlogger.workers.WORKER_KEY_RECEIPT_ID
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.mapNotNull
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 interface ReceiptRepository {
+    val outputWorkInfo: Flow<List<WorkInfo>>
+
     fun getItemStream(id: Int): Flow<Receipt?>
 
     fun pagingSource(): PagingSource<Int, ReceiptListItem>
@@ -54,6 +58,8 @@ interface ReceiptRepository {
     suspend fun update(item: Receipt): Int
 
     suspend fun insertAndParse(item: Receipt)
+
+    fun getWithItems(id: Int): Flow<ReceiptWithItems?>
 }
 
 class LocalReceiptRepository(
@@ -64,7 +70,15 @@ class LocalReceiptRepository(
 
     private val workManager = WorkManager.getInstance(context)
 
+    override val outputWorkInfo: Flow<List<WorkInfo>> =
+        workManager.getWorkInfosByTagFlow(TAG_FETCH_AND_PARSE)
+//            .mapNotNull {
+//            if (it.isNotEmpty()) it.first() else null
+//        }
+
     override fun getItemStream(id: Int): Flow<Receipt?> = dao.getItem(id)
+
+    override fun getWithItems(id: Int): Flow<ReceiptWithItems?> = dao.getWithItems(id)
 
     override fun pagingSource(): PagingSource<Int, ReceiptListItem> =
         dao.pagingSource(FetchStatus.Completed)
@@ -95,7 +109,6 @@ class LocalReceiptRepository(
             return
         }
 
-        Log.d("gosu", "receiptId: $receiptId")
         val constraints = Constraints.Builder()
 //            .setRequiresBatteryNotLow(true)
             .setRequiredNetworkType(NetworkType.CONNECTED)

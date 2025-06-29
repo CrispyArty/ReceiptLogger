@@ -7,6 +7,7 @@
 
     <string name="permission_dialog_button_cancel">Cancel</string>
     <string name="permission_dialog_button_ok">OK</string>
+    <string name="scanner_please_scan_qr_code">Show me QR code</string>
 
 
 </resources>

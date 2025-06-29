@@ -1,6 +1,6 @@
-package com.example.receiptlogger.data.network
+package com.example.receiptlogger.network
 
-import androidx.compose.ui.text.substring
+import android.util.Log
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import java.time.LocalDateTime
@@ -49,6 +49,7 @@ class ReceiptParser(val html: String) {
             "total",
             "taxes",
             "paymentMethod",
+            "rest", // optional
             "infoFooter",
             "footer"
         )
@@ -60,28 +61,29 @@ class ReceiptParser(val html: String) {
         )
 
         doc.select(".font-monospace > div").forEach {
-//            Log.d("Gosu", "--------------------${checkParseGroupIndex}")
-//            Log.d("Gosu", it.text())
-
-            if (checkParseGroupIndex >= checkParseGroups.size) {
+            if (it.text().contains("````````````")) {
+                checkParseGroupIndex++
                 return@forEach
             }
 
-            if (it.text().contains("````````````")) {
+            if (checkParseGroups[checkParseGroupIndex] == "rest" && !it.child(0).text().trim().startsWith("REST")) {
                 checkParseGroupIndex++
+            }
+
+            if (checkParseGroupIndex >= checkParseGroups.size) {
                 return@forEach
             }
 
             when (checkParseGroups[checkParseGroupIndex]) {
                 "header" -> {
                     when (headerIndex) {
-                        0 -> check.header = it.text()
+                        0 -> check.header = it.text().trim()
                         1 -> check.codFiscal = parseFieldValue(it, "COD FISCAL:")
-                        2 -> check.address = it.text()
+                        2 -> check.address = it.text().trim()
                         3 -> check.registrationNumber =
                             parseFieldValue(it, "NUMARUL DE ÎNREGISTRARE:")
 
-                        else -> check.header += "\n${it.text()}"
+                        else -> check.header += "\n${it.text().trim()}"
                     }
 
                     headerIndex++
@@ -106,12 +108,15 @@ class ReceiptParser(val html: String) {
                 "paymentMethod" -> {
                     check.paymentMethod = it.child(0).text().trim()
                 }
+
                 "infoFooter" -> {
                     when (preFooterIndex) {
                         0 -> check.purchaseDate = parsePurchaseDate(it)
+                        else -> null
                     }
                     preFooterIndex++
                 }
+
                 "footer" -> {
                     check.id = it.text().trim()
                 }
@@ -119,8 +124,6 @@ class ReceiptParser(val html: String) {
                 else -> return@forEach
             }
         }
-//        Log.d("Gosu", "-----===${checkItems.size}")
-//        Log.d("Gosu", check.description)
         if (check.items.isEmpty()) {
             throw ParseErrorException("Check does not have items")
         }
@@ -129,14 +132,13 @@ class ReceiptParser(val html: String) {
     }
 
     private fun parseFieldValue(row: Element, name: String): String {
-        return "${row.text().replace(name, "").trim()}\n"
+        return row.text().replace(name, "").trim()
     }
 
     private fun parseReceiptItem(row: Element): CheckItem? {
         val name = row.child(0).text()
         val countAndPrice = row.child(1).text()
 
-//        Log.d("Gosu", "createItem: ${name} | ${countAndPrice}")
 
         val list: List<String> = countAndPrice.trim().split("x")
 
@@ -156,7 +158,6 @@ class ReceiptParser(val html: String) {
     }
 
     private fun parseReceiptItemTotalPrice(row: Element): Float {
-//        Log.d("Gosu", "addItemTotalPrice: ${price}")
         val price = row.child(1).text()
         val parsedPrice = price.trim().split(" ")[0]
 

@@ -8,8 +8,8 @@ import com.example.receiptlogger.R
 import com.example.receiptlogger.data.receipt.Receipt
 import com.example.receiptlogger.data.receipt.ReceiptItem
 import com.example.receiptlogger.data.receipt.ReceiptRepository
-import com.example.receiptlogger.data.network.ReceiptParser
-import com.example.receiptlogger.data.network.ReceiptService
+import com.example.receiptlogger.network.ReceiptParser
+import com.example.receiptlogger.network.ReceiptService
 import com.example.receiptlogger.types.FetchStatus
 import com.example.receiptlogger.types.toMoney
 import kotlinx.coroutines.flow.first
@@ -40,17 +40,10 @@ class FetchAndParseReceiptWorker(
 
     override suspend fun doWork(): Result {
         return try {
-//            Log.d("gosu", "applicationContext: ${applicationContext}")
-
             var receipt: Receipt = receiptRepository.getItemStream(receiptId).first()
                 ?: throw RecordNotFoundException()
-//            Log.d("gosu", "receipt: ${receipt}")
-
             val html = retrofitReceipt.getCheck(receipt.qrCodeUrl)
-//            Log.d("gosu", "html: ${html}")
-
             val check = ReceiptParser(html).parse()
-//            Log.d("gosu", "check: ${check}")
 
             receipt = receipt.copy(
                 codFiscal = check.codFiscal,
@@ -62,9 +55,6 @@ class FetchAndParseReceiptWorker(
                 externalId = check.id,
             )
 
-//            Log.d("gosu", "check.items.size: ${check.items.size}")
-//            Log.d("gosu", "check.items: ${check.items}")
-//            Log.d("gosu", "receipt: ${receipt}")
 
             receiptRepository.update(receipt)
 
@@ -92,12 +82,4 @@ class FetchAndParseReceiptWorker(
             Result.failure()
         }
     }
-
-//    fun ReceiptHtmlParser.CheckItem.toReceiptItem(): ReceiptItem =
-//        ReceiptItem(
-//            name = name,
-//            count = count,
-//            itemPrice = itemPrice,
-//            totalPrice = totalPrice,
-//        )
 }

@@ -37,6 +37,12 @@ object FormatHelper {
             .withZone(ZoneId.systemDefault())
     }
 
+    val dateOfTheWeekFormatter: DateTimeFormatter by lazy {
+        DateTimeFormatter.ofPattern("d ccc, HH:MM")
+            .withLocale(Locale.US)
+            .withZone(ZoneId.systemDefault())
+    }
+
     val dateMonthFormatter: DateTimeFormatter by lazy {
         DateTimeFormatter.ofPattern("LLL yyyy")
             .withLocale(Locale.US)

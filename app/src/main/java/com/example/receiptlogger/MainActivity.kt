@@ -71,7 +71,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
+        enableEdgeToEdge()
 
         setContent {
             ReceiptLoggerTheme {
@@ -80,106 +80,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-//@Preview(showBackground = true,
-//    device = "spec:width=1080px,height=2400px,dpi=480,navigation=buttons", showSystemUi = true)
-//@Composable
-//fun MainScreenPreview() {
-//
-////    println("------------------------")
-////    println(LocalDateTime.now())
-////    println(LocalDateTime.now(ZoneOffset.UTC))
-////    println("------------------------")
-//
-//    ReceiptLoggerTheme {
-//        ReceiptLoggerApp()
-//    }
-//}
-
-//@Preview(
-//    showBackground = true,
-//    device = "spec:width=1080px,height=2400px,dpi=480,navigation=buttons", showSystemUi = true
-//)
-//@Composable
-//fun MainScreenPreview() {
-//    ReceiptLoggerTheme {
-//        ReceiptLoggerApp()
-//    }
-//}
-
-
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Preview(
-//    showBackground = true,
-//    device = "spec:width=1080px,height=2400px,dpi=480,navigation=buttons", showSystemUi = true
-//)
-//@Composable
-//fun MainScreenPreview1() {
-//
-////    println("------------------------")
-////    println(LocalDateTime.now())
-////    println(LocalDateTime.now(ZoneOffset.UTC))
-////    println("------------------------")
-//
-//    val currentScreen = ReceiptLoggerScreen.valueOf(
-//        ReceiptLoggerScreen.List.name
-//    )
-//
-////    val checks by viewModel.checksUiState.collectAsState()
-////    var currentCheck by rememberSaveable { mutableStateOf<Check?>(null) }
-//    ReceiptLoggerTheme {
-//        Scaffold(
-//            topBar = {
-//                MainTopAppBar(
-//                    title="Receipt Logger",
-////                    currentScreen = currentScreen,
-////                canNavigateBack = currentScreen != ReceiptLoggerScreen.Start,
-//                    canNavigateBack = true,
-//                    navigateUp = { }
-//                )
-//            }
-//        ) { innerPadding ->
-////        val uiState by viewModel.uiState.collectAsState()
-//            Column(modifier = Modifier
-//                .padding(innerPadding)
-//                .padding(16.dp)) {
-//
-//                repeat (5) {
-//                    Card(
-//                        Modifier.padding(vertical = 4.dp)
-//                    ) {
-//                        Row(Modifier.fillMaxWidth().padding(16.dp)) {
-//                            Column(Modifier.weight(1f)) {
-//                                Text("Linella")
-//                                Text("Price: 28$")
-//                            }
-//
-//                            Text("16")
-//                        }
-//                    }
-//                }
-//
-//
-//                Box() {
-//                    Row(
-//                        horizontalArrangement = Arrangement.End,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .align(Alignment.BottomEnd)
-//                            .padding(bottom = 30.dp)
-//                    ) {
-//                        FloatingActionButton(
-//                            onClick = {},
-//                            modifier = Modifier.padding(0.dp)
-//                        ) {
-//                            Icon(Icons.Rounded.Add, "New")
-//                        }
-//                    }
-//
-//                }
-//
-//            }
-//        }
-//    }
-//}
-

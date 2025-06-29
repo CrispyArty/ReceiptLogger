@@ -30,10 +30,8 @@ class QrCodeScanViewModal(
     }
 
     fun onScan(qrCodeUrl: String) {
-//        Log.d("gosu", "qrCodeUrl: ${qrCodeUrl}")
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                Log.d("gosu","${Thread.currentThread().name} - viewModelScope::onScan")
 
                 if (receiptRepository.isExistByCode(qrCodeUrl)) {
                     error = CreateError.ALREADY_EXISTS

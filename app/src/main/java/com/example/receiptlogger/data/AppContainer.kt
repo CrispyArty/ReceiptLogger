@@ -3,7 +3,7 @@ package com.example.receiptlogger.data
 
 import android.content.Context
 import com.example.receiptlogger.data.receipt.LocalReceiptRepository
-import com.example.receiptlogger.data.network.ReceiptService
+import com.example.receiptlogger.network.ReceiptService
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 

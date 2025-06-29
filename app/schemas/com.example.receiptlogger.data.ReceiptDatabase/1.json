@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0c7326f5a90f70757f8a8ece9c2ed146",
+    "identityHash": "1b58d059ddcdabfdd7eddb37002944d3",
     "entities": [
       {
         "tableName": "receipts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `qr_code_url` TEXT NOT NULL, `cod_fiscal` TEXT, `registration_number` TEXT, `address` TEXT, `total_price` INTEGER, `purchase_date` INTEGER, `fetch_status` TEXT NOT NULL, `upload_status` TEXT NOT NULL, `created_at` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `qr_code_url` TEXT NOT NULL, `cod_fiscal` TEXT, `registration_number` TEXT, `address` TEXT, `total_price` INTEGER, `payment_method` TEXT, `purchase_date` INTEGER, `external_id` TEXT, `fetch_status` TEXT NOT NULL, `upload_status` TEXT NOT NULL, `created_at` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -41,9 +41,19 @@
             "affinity": "INTEGER"
           },
           {
+            "fieldPath": "paymentMethod",
+            "columnName": "payment_method",
+            "affinity": "TEXT"
+          },
+          {
             "fieldPath": "purchaseDate",
             "columnName": "purchase_date",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "externalId",
+            "columnName": "external_id",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "fetchStatus",
@@ -153,7 +163,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c7326f5a90f70757f8a8ece9c2ed146')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1b58d059ddcdabfdd7eddb37002944d3')"
     ]
   }
 }

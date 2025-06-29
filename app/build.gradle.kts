@@ -6,10 +6,9 @@ plugins {
     alias(libs.plugins.room)
 }
 
-
 android {
     namespace = "com.example.receiptlogger"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.receiptlogger"
@@ -29,6 +28,11 @@ android {
                 "proguard-rules.pro"
             )
         }
+//        debug {
+//            applicationIdSuffix = ".debug"
+//            isDebuggable = true
+//        }
+
     }
 
     room {
@@ -47,8 +51,15 @@ android {
     }
 
 //    packaging {
+//        pickFirst = "META-INF/DEPENDENCIES"
+//    }
+
+//    packaging {
 //        resources {
-//            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//            excludes += "META-INF/INDEX.LIST"
+//            excludes += "META-INF/DEPENDENCIES"
+//
+////            excludes += "/META-INF/{AL2.0,LGPL2.1}"
 //        }
 //    }
 
@@ -78,19 +89,25 @@ dependencies {
     implementation(libs.androidx.room.paging)
 
 
-    // CameraX
+    // CameraX + ML Kit Barcode Scanning
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
-
-    // ML Kit Barcode Scanning
     implementation (libs.barcode.scanning)
 
     // Zxing + barcode
-    implementation(libs.zxing.core)
-    implementation(libs.zxing.android.embedded)
+//    implementation(libs.zxing.core)
+//    implementation(libs.zxing.android.embedded)
 
+
+    //Google Sheets
+//    implementation(libs.jackson.databind)
+//    implementation(libs.google.api.client)
+//    implementation(libs.google.oauth.client.jetty)
+//    implementation(libs.google.api.services.sheets)
+//    implementation(libs.play.services.auth)
+//    implementation(libs.firebase.auth)
 
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
