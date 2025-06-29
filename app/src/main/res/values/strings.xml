@@ -10,4 +10,9 @@
     <string name="error_parsing_receipt">Error while parsing for receipt</string>
     <string name="error_alert_receipt_already_exist">Receipt with this code already in database</string>
 
+    <string name="receipt_delete_alert_title">Receipt Deletion</string>
+    <string name="receipt_delete_alert_text">You are about to delete receipt from database, are you sure?</string>
+    <string name="receipt_delete_alert_delete_button">DELETE</string>
+    <string name="receipt_delete_alert_cancel_button">Cancel</string>
+
 </resources>

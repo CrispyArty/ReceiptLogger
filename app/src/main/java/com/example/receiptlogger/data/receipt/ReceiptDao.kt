@@ -8,17 +8,10 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.example.receiptlogger.domain.MonthCounts
 import com.example.receiptlogger.types.FetchStatus
-import com.example.receiptlogger.types.Money
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
 import java.time.LocalDateTime
-
-//data class GroupedList(
-//    val datetimeMonth: LocalDate,
-//    val monthPriceCents: Int,
-//    val list: List<ReceiptListItem>
-//)
 
 
 @Dao
@@ -40,7 +33,7 @@ interface ReceiptDao {
     suspend fun isExistByCode(qrCodeUrl: String): Boolean
 
     @Query(
-        "SELECT SUM(receipts.total_price) " +
+        "SELECT SUM(receipts.total_price) as totalPrice, count(receipts.id) as itemCount " +
                 "FROM receipts " +
                 "WHERE receipts.fetch_status == :fetchStatus " +
                 "AND receipts.purchase_date >= :from AND receipts.purchase_date <= :to"
@@ -49,15 +42,17 @@ interface ReceiptDao {
         from: LocalDateTime,
         to: LocalDateTime,
         fetchStatus: FetchStatus = FetchStatus.Completed,
-    ): Int
+    ): MonthCounts
 
     @Query("SELECT * from receipts WHERE id = :id")
     fun getItem(id: Int): Flow<Receipt>
 
-    @Query("SELECT * " +
-            "FROM receipts " +
-            "LEFT JOIN receipt_items ON receipts.id = receipt_items.receipt_id " +
-            "WHERE receipts.id = :id")
+    @Query(
+        "SELECT * " +
+                "FROM receipts " +
+                "LEFT JOIN receipt_items ON receipts.id = receipt_items.receipt_id " +
+                "WHERE receipts.id = :id"
+    )
     fun getWithItems(id: Int): Flow<ReceiptWithItems?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

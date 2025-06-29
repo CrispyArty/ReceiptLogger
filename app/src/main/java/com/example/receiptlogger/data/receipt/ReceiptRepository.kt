@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2023 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.example.receiptlogger.data.receipt
 
 import android.content.Context
@@ -29,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.example.receiptlogger.data.ReceiptDatabase
+import com.example.receiptlogger.domain.MonthCounts
 import com.example.receiptlogger.types.FetchStatus
 import com.example.receiptlogger.workers.FetchAndParseReceiptWorker
 import com.example.receiptlogger.workers.TAG_FETCH_AND_PARSE
@@ -45,7 +30,7 @@ interface ReceiptRepository {
 
     fun pagingSource(): PagingSource<Int, ReceiptListItem>
 
-    suspend fun countByMonth(datetime: LocalDateTime): Int
+    suspend fun countByMonth(datetime: LocalDateTime): MonthCounts
 
     suspend fun isExistByCode(qrCodeUrl: String): Boolean
 
@@ -83,7 +68,7 @@ class LocalReceiptRepository(
     override fun pagingSource(): PagingSource<Int, ReceiptListItem> =
         dao.pagingSource(FetchStatus.Completed)
 
-    override suspend fun countByMonth(datetime: LocalDateTime): Int {
+    override suspend fun countByMonth(datetime: LocalDateTime): MonthCounts {
         val month = datetime.toLocalDate().withDayOfMonth(1)
 
         return dao.countByDateRange(

@@ -1,6 +1,5 @@
 package com.example.receiptlogger.ui.home
 
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -9,11 +8,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,24 +18,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.receiptlogger.ui.navigation.NavigationDestination
 import com.example.receiptlogger.R
@@ -46,35 +38,25 @@ import com.example.receiptlogger.ui.AppViewModelProvider
 import com.example.receiptlogger.ui.theme.ReceiptLoggerTheme
 import com.example.receiptlogger.ui.topbar.ProvideAppBarTitle
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.map
-import com.example.receiptlogger.data.receipt.Receipt
-import com.example.receiptlogger.data.receipt.ReceiptListItem
-import com.example.receiptlogger.data.store.StoreData
+import com.example.receiptlogger.domain.MonthCounts
 import com.example.receiptlogger.domain.ReceiptListItemUiModel
-import com.example.receiptlogger.types.FetchStatus
 import com.example.receiptlogger.types.Money
 import com.example.receiptlogger.types.UploadStatus
 import com.example.receiptlogger.types.toMoney
 import com.example.receiptlogger.ui.FormatHelper
 import com.example.receiptlogger.ui.components.Loading
 import com.example.receiptlogger.ui.formatted
+import com.example.receiptlogger.ui.theme.WavyShape
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.TimeZone
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 object HomeDestination : NavigationDestination {
     override val route = "home"
@@ -166,8 +148,8 @@ fun ItemList(
 
                         DateRow(
                             date = monthHeader.dateTime,
-                            totalPrice = monthHeader.totalPrice,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            counts = monthHeader.counts,
+                            modifier = Modifier.padding(bottom = 8.dp),
                         )
                     }
 
@@ -183,9 +165,9 @@ fun ItemList(
 
 @Composable
 fun DateRow(
+    counts: MonthCounts,
     date: LocalDateTime,
-    totalPrice: Money?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -204,12 +186,10 @@ fun DateRow(
             style = MaterialTheme.typography.titleMedium,
         )
 
-        if (totalPrice != null) {
-            Text(
-                text = totalPrice.formatted,
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
+        Text(
+            text = "${counts.itemCount} / ${counts.totalPrice.formatted}",
+            style = MaterialTheme.typography.titleMedium,
+        )
 
     }
 }
@@ -227,7 +207,7 @@ fun ItemCard(
 //    )
 
     Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
 //        colors = CardDefaults.cardColors().copy(
 //            containerColor = color,
 //        ),
@@ -238,7 +218,7 @@ fun ItemCard(
                     stiffness = Spring.StiffnessMedium
                 )
             )
-
+//        modifier = Modifier
     ) {
         Box(
             Modifier.clickable(onClick = {
@@ -280,7 +260,7 @@ fun ItemCard(
                     )
 
                     Text(
-                        text = receipt.totalPrice.formatted,
+                        text = "${receipt.itemCount} / ${receipt.totalPrice.formatted}",
                         style = MaterialTheme.typography.titleLarge,
 //                    modifier = Modifier.align(Alignment.CenterVertically)
                     )
@@ -328,14 +308,17 @@ fun ItemListPreview() {
         val pageItems: List<UiPageItem> = listOf(
             UiPageItem.MonthHeader(
                 LocalDateTime.now(),
-                228.30.toMoney()
+                MonthCounts(
+                    itemCount = 12,
+                    totalPrice = 2812.8f.toMoney(),
+                )
             ),
             UiPageItem.Item(
                 ReceiptListItemUiModel(
                     id = 1,
                     storeName = "Linella",
                     address = "st. example",
-                    totalPrice = 2812212.8f.toMoney(),
+                    totalPrice = 2812.8f.toMoney(),
                     purchaseDate = LocalDateTime.now(),
                     uploadStatus = UploadStatus.Uploaded,
                     itemCount = 15
@@ -346,7 +329,7 @@ fun ItemListPreview() {
                     id = 2,
                     storeName = "Linella",
                     address = "st. example",
-                    totalPrice = 2812212.8f.toMoney(),
+                    totalPrice = 2812.8f.toMoney(),
                     purchaseDate = LocalDateTime.now(),
                     uploadStatus = UploadStatus.Uploaded,
                     itemCount = 17
@@ -354,7 +337,10 @@ fun ItemListPreview() {
             ),
             UiPageItem.MonthHeader(
                 LocalDateTime.now(),
-                228.30.toMoney()
+                MonthCounts(
+                    itemCount = 12,
+                    totalPrice = 2812.8f.toMoney(),
+                )
             ),
 
             UiPageItem.Item(
@@ -405,7 +391,7 @@ fun InventoryItemPreview() {
                 id = 1,
                 storeName = "2812212281221",
                 address = "st. example st. example st. example st. example st. example st. example st. example ",
-                totalPrice = 2812212.8f.toMoney(),
+                totalPrice = 2812.8f.toMoney(),
                 purchaseDate = LocalDateTime.now(),
                 uploadStatus = UploadStatus.Pending,
                 itemCount = 15

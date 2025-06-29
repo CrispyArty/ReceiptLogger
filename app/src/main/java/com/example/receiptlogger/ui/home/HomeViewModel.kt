@@ -9,17 +9,16 @@ import androidx.paging.insertSeparators
 import androidx.paging.map
 import com.example.receiptlogger.data.receipt.ReceiptListItem
 import com.example.receiptlogger.data.receipt.ReceiptRepository
+import com.example.receiptlogger.domain.MonthCounts
 import com.example.receiptlogger.domain.ReceiptListItemUiModel
 import com.example.receiptlogger.domain.toUiModel
-import com.example.receiptlogger.types.Money
-import com.example.receiptlogger.types.toMoney
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 
 
 sealed interface UiPageItem {
     data class Item(val item: ReceiptListItemUiModel) : UiPageItem
-    data class MonthHeader(val dateTime: LocalDateTime, val totalPrice: Money? = null) : UiPageItem
+    data class MonthHeader(val dateTime: LocalDateTime, val counts: MonthCounts) : UiPageItem
 }
 
 class HomeViewModel(
@@ -38,14 +37,12 @@ class HomeViewModel(
                         after == null -> null
                         before == null -> UiPageItem.MonthHeader(
                             dateTime = after.item.purchaseDate,
-                            totalPrice = receiptRepository.countByMonth(after.item.purchaseDate)
-                                .toMoney(),
+                            counts = receiptRepository.countByMonth(after.item.purchaseDate)
                         )
 //                        shouldSeparate(before, after) -> null
                         shouldSeparate(before, after) -> UiPageItem.MonthHeader(
                             dateTime = after.item.purchaseDate,
-                            totalPrice = receiptRepository.countByMonth(after.item.purchaseDate)
-                                .toMoney(),
+                            counts = receiptRepository.countByMonth(after.item.purchaseDate),
                         )
 
                         else -> null
