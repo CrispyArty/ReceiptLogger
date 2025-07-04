@@ -1,14 +1,10 @@
 package com.example.receiptlogger.data.receipt
 
 import android.content.Context
-import android.net.Uri
-import android.util.Log
 import androidx.paging.PagingSource
 import androidx.work.Constraints
 import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -19,14 +15,15 @@ import com.example.receiptlogger.workers.FetchAndParseReceiptWorker
 import com.example.receiptlogger.workers.TAG_FETCH_AND_PARSE
 import com.example.receiptlogger.workers.WORKER_KEY_RECEIPT_ID
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.mapNotNull
-import java.time.LocalDate
+import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 
 interface ReceiptRepository {
     val outputWorkInfo: Flow<List<WorkInfo>>
 
     fun getItemStream(id: Int): Flow<Receipt?>
+
+    fun getIdsByStatus(status: FetchStatus = FetchStatus.Pending): Flow<List<Int>>
 
     fun pagingSource(): PagingSource<Int, ReceiptListItem>
 
@@ -43,6 +40,10 @@ interface ReceiptRepository {
     suspend fun update(item: Receipt): Int
 
     suspend fun insertAndParse(item: Receipt)
+
+    fun queueParserJob(id: Int)
+
+    suspend fun queueAllPending()
 
     fun getWithItems(id: Int): Flow<ReceiptWithItems?>
 }
@@ -62,6 +63,8 @@ class LocalReceiptRepository(
 //        }
 
     override fun getItemStream(id: Int): Flow<Receipt?> = dao.getItem(id)
+
+    override fun getIdsByStatus(status: FetchStatus): Flow<List<Int>> = dao.getIdsByStatus(status)
 
     override fun getWithItems(id: Int): Flow<ReceiptWithItems?> = dao.getWithItems(id)
 
@@ -94,6 +97,10 @@ class LocalReceiptRepository(
             return
         }
 
+        queueParserJob(receiptId.toInt())
+    }
+
+    override fun queueParserJob(id: Int) {
         val constraints = Constraints.Builder()
 //            .setRequiresBatteryNotLow(true)
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -102,16 +109,19 @@ class LocalReceiptRepository(
         workManager.enqueue(
             OneTimeWorkRequestBuilder<FetchAndParseReceiptWorker>()
                 .addTag(TAG_FETCH_AND_PARSE)
-                .setInputData(createInputDataForWorkRequest(receiptId))
+                .setInputData(createInputDataForWorkRequest(id))
                 .setConstraints(constraints)
                 .build()
         )
-
     }
 
-    private fun createInputDataForWorkRequest(receiptId: Long): Data {
+    override suspend fun queueAllPending() {
+        getIdsByStatus(FetchStatus.Pending).first().forEach(::queueParserJob)
+    }
+
+    private fun createInputDataForWorkRequest(receiptId: Int): Data {
         val builder = Data.Builder()
-        builder.putInt(WORKER_KEY_RECEIPT_ID, receiptId.toInt())
+        builder.putInt(WORKER_KEY_RECEIPT_ID, receiptId)
 
         return builder.build()
     }

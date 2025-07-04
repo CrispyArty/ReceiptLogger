@@ -2,28 +2,25 @@
 
 package com.example.receiptlogger.ui.topbar
 
-import android.util.Log
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import com.example.receiptlogger.data.receipt.ReceiptRepository
+import com.example.receiptlogger.types.FetchStatus
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import java.time.Instant
-import java.util.TimeZone
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 
@@ -58,14 +55,22 @@ sealed interface JobStatusUiState {
 
 
 class TopBarViewModal(
-    receiptRepository: ReceiptRepository
+    private val receiptRepository: ReceiptRepository
 ) : ViewModel() {
 
     var running: UUID? by mutableStateOf(null)
 
-//    private val _runningList = MutableStateFlow(GameUiState())
-//    val runningList: StateFlow<GameUiState> = _uiState.asStateFlow()
-
+    val missingJobsReceipts: StateFlow<List<Int>> = receiptRepository
+        .getIdsByStatus(FetchStatus.Pending)
+        .map { listOfIds ->
+            delay(2000)
+            listOfIds
+        }
+        .stateIn(
+            scope = viewModelScope,
+            initialValue = emptyList(),
+            started = SharingStarted.WhileSubscribed(5_000)
+        )
 
     val jobStatusUiState: StateFlow<JobStatusUiState> = receiptRepository.outputWorkInfo
         .map { list ->
@@ -96,5 +101,13 @@ class TopBarViewModal(
             initialValue = JobStatusUiState.Idle,
             started = SharingStarted.WhileSubscribed(5_000)
         )
+
+
+    fun enqueueMissing() {
+        viewModelScope.launch {
+            receiptRepository.queueAllPending()
+        }
+
+    }
 
 }

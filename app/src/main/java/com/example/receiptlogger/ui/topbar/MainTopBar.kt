@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,8 +50,8 @@ fun MainTopBarWithNav(
 ) {
     val uiData by TopBarUiState.data.collectAsState()
     val uiState by viewModal.jobStatusUiState.collectAsStateWithLifecycle()
+    val missingJobsReceipts by viewModal.missingJobsReceipts.collectAsStateWithLifecycle()
     var isVisible by remember { mutableStateOf(true) }
-
     LaunchedEffect(uiState) {
         if (uiState is JobStatusUiState.Complete) {
             isVisible = true
@@ -77,13 +78,15 @@ fun MainTopBarWithNav(
             }
         },
         actions = {
+            val actionModifier = Modifier
+                .padding(end = 16.dp)
+                .size(32.dp)
+                .align(Alignment.CenterVertically)
             when (uiState) {
                 is JobStatusUiState.Loading -> CircularProgressIndicator(
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier
-                        .padding(end = 16.dp)
-                        .size(32.dp),
+                    modifier = actionModifier
                 )
 
                 is JobStatusUiState.Complete -> AnimatedVisibility(
@@ -94,15 +97,23 @@ fun MainTopBarWithNav(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = "Uploaded",
                         tint = colorResource(R.color.green_check),
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(32.dp)
-                            .align(Alignment.CenterVertically)
+                        modifier = actionModifier
 
                     )
                 }
 
-                else -> Unit
+                else -> if (missingJobsReceipts.isNotEmpty()) {
+                    IconButton(
+                        onClick = viewModal::enqueueMissing
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.outline_sync),
+                            contentDescription = "Sync",
+                            modifier = actionModifier
+                        )
+                    }
+
+                }
             }
 
         },
