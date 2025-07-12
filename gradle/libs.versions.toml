@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.0"
+agp = "8.11.1"
 barcodeScanning = "17.3.0"
 cameraCamera2 = "1.4.2"
 converterScalars = "3.0.0"
