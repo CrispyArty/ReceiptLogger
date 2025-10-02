@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -23,11 +24,17 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
@@ -55,7 +63,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-
+import androidx.compose.ui.tooling.preview.Preview as GPreview
 
 object Intents {
     const val SCAN_INTENT = "com.example.receiptlogger.SCAN"
@@ -153,10 +161,52 @@ class ScannerActivity : ComponentActivity() {
 
 
 @Composable
+fun TopBar(isOn: Boolean, onFlashClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(dimensionResource(R.dimen.padding_medium))
+
+    ) {
+        Text(
+            text = stringResource(R.string.scanner_please_scan_qr_code),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.inverseOnSurface,
+            modifier = Modifier
+                .weight(1.0f)
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                .padding(start = 40.dp)
+        )
+
+        IconButton(
+            onClick = onFlashClick,
+            modifier = Modifier
+                .size(40.dp)
+                .padding(0.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Warning,
+//                painter = painterResource(R.drawable.arrow_outward),
+                tint = if (isOn)
+                    MaterialTheme.colorScheme.inversePrimary
+                else
+                    MaterialTheme.colorScheme.inverseOnSurface,
+                contentDescription = "Flashlight",
+            )
+        }
+    }
+}
+
+
+@Composable
 fun CameraView(onScan: (Barcode) -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var preview by remember { mutableStateOf<Preview?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
+    var isFlashOn by remember { mutableStateOf(false) }
 
     Scaffold { innerPadding ->
         Column(
@@ -164,15 +214,14 @@ fun CameraView(onScan: (Barcode) -> Unit, modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Text(
-                text = stringResource(R.string.scanner_please_scan_qr_code),
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.inverseOnSurface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.inverseSurface)
-                    .wrapContentWidth(align = Alignment.CenterHorizontally)
-                    .padding(dimensionResource(R.dimen.padding_medium))
+            TopBar(
+                isOn = isFlashOn,
+                onFlashClick = {
+                    if (camera != null) {
+                        isFlashOn = !isFlashOn
+                        camera!!.cameraControl.enableTorch(isFlashOn)
+                    }
+                }
             )
             AndroidView(
                 factory = { androidViewContext ->
@@ -213,7 +262,7 @@ fun CameraView(onScan: (Barcode) -> Unit, modifier: Modifier = Modifier) {
                             }
                         try {
                             cameraProvider.unbindAll()
-                            cameraProvider.bindToLifecycle(
+                            camera = cameraProvider.bindToLifecycle(
                                 lifecycleOwner,
                                 cameraSelector,
                                 preview,
@@ -227,11 +276,8 @@ fun CameraView(onScan: (Barcode) -> Unit, modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize(),
             )
         }
-
     }
-
 }
-
 
 @Composable
 private fun PermissionDialogs(
@@ -347,12 +393,13 @@ fun ShowRationalPermissionDialog(
     )
 }
 
-//@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
-//@Composable
-//fun PreviewScanner() {
-//    ReceiptLoggerTheme {
-//        CameraView(
-//            onScan = {}
-//        )
-//    }
-//}
+@GPreview(showBackground = true)
+@Composable
+fun LoadingPreview() {
+    ReceiptLoggerTheme {
+        TopBar(
+            isOn = true,
+            onFlashClick = {}
+        )
+    }
+}
